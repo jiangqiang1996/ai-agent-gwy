@@ -1,0 +1,135 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    ".opencode/rules/**/*.md"
+  ],
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "git *": "allow",
+      "git commit *": "ask",
+      "git push *": "ask",
+      "mvn *": "allow",
+      "rm -rf *": "deny",
+      "del *": "deny"
+    },
+    "skill": {
+      "*": "allow"
+    },
+    "task": {
+      "*": "allow"
+    }
+  },
+  "agent": {
+    "orchestrator": {
+      "description": "多代理辅导编排器：分析用户意图，路由到合适的老师和学生代理，整合输出",
+      "mode": "primary",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true,
+        "task": true,
+        "skill": true,
+        "user-profile": true,
+        "timer": true,
+        "grading": true,
+        "question-generator": true,
+        "points": true,
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    },
+    "xingce-zong-teacher": {
+      "description": "行测总老师：系统教学行测所有模块，提供全局方法论和跨模块策略",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#4ecdc4"
+    },
+    "xingce-yanyu-teacher": {
+      "description": "言语理解与表达老师：逻辑填空、片段阅读、语句表达专项教学",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#45b7d1"
+    },
+    "xingce-shuliang-teacher": {
+      "description": "数量关系老师：数学运算解题套路、速算技巧、分层教学",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#96ceb4"
+    },
+    "xingce-panduan-teacher": {
+      "description": "判断推理老师：图形推理、定义判断、类比推理、逻辑判断",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#feca57"
+    },
+    "xingce-ziliao-teacher": {
+      "description": "资料分析老师：速算技巧、公式记忆、快速读材料方法",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#ff9ff3"
+    },
+    "xingce-changshi-teacher": {
+      "description": "常识判断老师：法律、经济、科技、人文、地理、管理知识框架",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#54a0ff"
+    },
+    "xingce-zhengzhi-teacher": {
+      "description": "政治理论老师：政治理论体系、时政热点、关键词记忆法",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#5f27cd"
+    },
+    "guokao-champion": {
+      "description": "国考总分第一(应届生)：全职备考视角、系统化学习方法、校园备考经验",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#95e1d3"
+    },
+    "chongqing-champion": {
+      "description": "重庆省考总分第一(在职)：朝九晚六打工人、碎片时间备考、极致效率",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#f8b195"
+    }
+  }
+}
