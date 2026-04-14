@@ -2,7 +2,7 @@ import { randomUUID } from "crypto"
 
 import { REGIONS } from "../shared/constants.js"
 import { normalizeExamTypes } from "../shared/formatters.js"
-import type { StudyPlan, UserProfile } from "../shared/types.js"
+import type { StudyPlan, UserIdentity, UserProfile } from "../shared/types.js"
 import { getNameClaim, saveNameClaim } from "../storage/identity-index-repository.js"
 import { deleteProfileRecord, findProfilesByName, saveProfileRecord } from "../storage/profile-repository.js"
 
@@ -10,6 +10,7 @@ export interface ProfileServiceInput {
   username: string
   examTypes?: string[]
   region?: string
+  identity?: UserIdentity | null
 }
 
 export interface ProfileUpdateInput {
@@ -17,6 +18,7 @@ export interface ProfileUpdateInput {
   newName?: string
   examTypes?: string[]
   region?: string
+  identity?: UserIdentity | null
 }
 
 
@@ -35,9 +37,7 @@ function buildFreshProfile(input: ProfileServiceInput): UserProfile {
     id: randomUUID(),
     name: input.username,
     createdAt: new Date().toISOString(),
-    points: 0,
-    level: 1,
-    streak: { current: 0, best: 0 },
+    identity: input.identity ?? null,
     mastery: {},
     history: [],
     examTypes: normalizeExamTypes(input.examTypes ?? []),
@@ -202,6 +202,11 @@ export async function updateProfileDetails(worktree: string, input: ProfileUpdat
   if (input.region !== undefined) {
     profile.region = normalizeRegion(input.region)
     changes.push(`地区→${profile.region || "未设置"}`)
+  }
+
+  if (input.identity !== undefined && input.identity !== profile.identity) {
+    profile.identity = input.identity
+    changes.push(`身份→${profile.identity === "working" ? "在职" : profile.identity === "campus" ? "应届生" : "未设置"}`)
   }
 
   if (changes.length === 0) {

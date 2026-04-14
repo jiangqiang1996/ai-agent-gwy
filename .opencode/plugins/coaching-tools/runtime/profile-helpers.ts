@@ -10,9 +10,7 @@ export function createUserProfile(name: string): UserProfile {
     id: randomUUID(),
     name,
     createdAt: new Date().toISOString(),
-    points: 0,
-    level: 1,
-    streak: { current: 0, best: 0 },
+    identity: null,
     mastery: {},
     history: [],
     examTypes: [],
@@ -42,6 +40,7 @@ export function findProfileByName(worktree: string, name: string): UserProfile |
 
 export function migrateProfile(profile: UserProfile): UserProfile {
   if (!profile.id) profile.id = randomUUID()
+  if (profile.identity === undefined) profile.identity = null
   if (!profile.examTypes) profile.examTypes = []
   if (profile.region === undefined) profile.region = null
   if (!profile.studyPlan) profile.studyPlan = null

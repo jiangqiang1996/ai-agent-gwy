@@ -20,6 +20,26 @@ describe("profile schema migration", () => {
       schemaVersion: 1,
     })
     expect(result.profile?.id).toBeTruthy()
+    expect(result.profile).toMatchObject({ identity: null })
+  })
+
+  it("treats missing points/level/streak as readable legacy state, not broken core schema", () => {
+    const result = migrateProfileRecord({
+      id: "legacy-no-score",
+      name: "legacy-no-score",
+      createdAt: "2026-01-02T03:04:05.000Z",
+      mastery: {},
+      history: [],
+      examTypes: ["guokao"],
+      region: null,
+      studyPlan: null,
+    })
+
+    expect(result.classification).toBe("lazy")
+    expect(result.profile).toMatchObject({
+      id: "legacy-no-score",
+      identity: null,
+    })
   })
 
   it("blocks semantically unsafe enum values", () => {
@@ -39,6 +59,40 @@ describe("profile schema migration", () => {
 
     expect(result.classification).toBe("blocked")
     expect(result.issues[0]?.code).toMatch(/unknown-exam-type|invalid-region/)
+  })
+
+  it("blocks incomplete legacy score fields that can no longer be safely normalized", () => {
+    const result = migrateProfileRecord({
+      id: "legacy-partial-score",
+      name: "legacy-partial-score",
+      createdAt: "2026-01-02T03:04:05.000Z",
+      points: 10,
+      mastery: {},
+      history: [],
+      examTypes: ["guokao"],
+      region: null,
+      studyPlan: null,
+    })
+
+    expect(result.classification).toBe("blocked")
+    expect(result.issues[0]?.code).toBe("invalid-legacy-score")
+  })
+
+  it("blocks invalid identity values", () => {
+    const result = migrateProfileRecord({
+      id: "legacy-invalid-identity",
+      name: "legacy-invalid-identity",
+      createdAt: "2026-01-02T03:04:05.000Z",
+      mastery: {},
+      history: [],
+      examTypes: ["guokao"],
+      region: null,
+      studyPlan: null,
+      identity: "teacher",
+    })
+
+    expect(result.classification).toBe("blocked")
+    expect(result.issues[0]?.code).toBe("invalid-identity")
   })
 
   it("quarantines structurally invalid records", () => {

@@ -2,11 +2,11 @@ import { tool } from "@opencode-ai/plugin"
 
 import { XINGCE_SUBJECTS } from "../shared/constants.js"
 import { getLeafTopics, getValidSubjects } from "../shared/formatters.js"
-import { loadProfileByName } from "../runtime/profile-helpers.js"
+import { loadProfile } from "../services/profile-service.js"
 
 export function createQuestionGeneratorTool() {
   return tool({
-    description: "出题工具。根据科目、考试类型和地区生成出题提示模板。支持考试类型差异化权重出题。冷启动用户自动随机选择科目。",
+    description: "经典例题/代表性示例生成工具。根据科目、考试类型和地区生成老师的示例讲解提示模板。",
     args: {
       subject: tool.schema.string().optional().describe("科目名称 (可选, 不填则根据用户画像/考试类型选择)"),
       username: tool.schema.string().describe("用户名 (用于查询学习画像)"),
@@ -17,15 +17,19 @@ export function createQuestionGeneratorTool() {
     async execute(args, context) {
       try {
         const worktree = context.worktree
-        const userExamTypes = args.examTypes || []
-        const userRegion = args.region || null
+        const profileState = await loadProfile(worktree, args.username)
+        if (profileState.status === "blocked") {
+          return `Error: 用户 ${args.username} 当前处于冲突/修复状态，无法基于档案生成示例。请先修复档案或显式指定科目/考试类型。`
+        }
+        const profile = profileState.status === "loaded" ? profileState.profile : undefined
+        const userExamTypes = args.examTypes ?? profile?.examTypes ?? []
+        const userRegion = args.region ?? profile?.region ?? null
         const validSubjects = getValidSubjects(userExamTypes, userRegion)
 
         let selectedSubject = args.subject
         let selectedLeaf = args.leafTopic
 
         if (!selectedSubject) {
-          const profile = loadProfileByName(worktree, args.username)
           if (profile && Object.keys(profile.mastery).length > 0) {
             const examSubjects = userExamTypes.length > 0 ? validSubjects : XINGCE_SUBJECTS
             let worstAcc = 100
@@ -67,22 +71,19 @@ export function createQuestionGeneratorTool() {
           }
         }
 
-        const questionId = `q-${Date.now()}`
-        const teacherPrompt = `请出一道${selectedSubject}${selectedLeaf ? " (" + selectedLeaf + ")" : ""}的练习题。
+        const questionId = `example-${Date.now()}`
+        const teacherPrompt = `请围绕${selectedSubject}${selectedLeaf ? " (" + selectedLeaf + ")" : ""}给出 1 个代表性经典例题，并完成详细讲解。
 
 要求:
-1. 必须是单项选择题 (4个选项 A/B/C/D)
-2. 题目要有实际难度，不能太简单
-3. 必须包含完整的题目文本、4个选项、正确答案和详细解析
-4. 自检: 生成后请验证你的答案是否确实正确，选项是否有逻辑问题
+1. 先用 1-2 句话概括这道例题对应的核心知识点
+2. 再给出 1 道有代表性的例题，题型可以是选择题或更适合讲解的形式
+3. 必须包含题目文本、答案要点和详细解析
+4. 解释中要突出思路、易错点和为什么这个例题有代表性
 
 输出格式:
-题目: [题目文本]
-A. [选项A]
-B. [选项B]
-C. [选项C]
-D. [选项D]
-正确答案: [A/B/C/D]
+知识点总结: [1-2句]
+例题: [题目文本]
+答案要点: [关键答案]
 解析: [详细解析]`
 
         return JSON.stringify({

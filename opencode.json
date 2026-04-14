@@ -32,10 +32,9 @@
         "task": true,
         "skill": true,
         "user-profile": true,
-        "timer": true,
+        "export-document": true,
         "grading": true,
         "question-generator": true,
-        "points": true,
         "write": false,
         "edit": false,
         "bash": false
@@ -111,8 +110,8 @@
       },
       "color": "#5f27cd"
     },
-    "guokao-champion": {
-      "description": "国考总分第一(应届生)：全职备考视角、系统化学习方法、校园备考经验",
+    "guokao-working-champion": {
+      "description": "在职国考状元：在职备考视角、高效率国考经验",
       "mode": "subagent",
       "tools": {
         "read": true,
@@ -121,8 +120,18 @@
       },
       "color": "#95e1d3"
     },
-    "chongqing-champion": {
-      "description": "重庆省考总分第一(在职)：朝九晚六打工人、碎片时间备考、极致效率",
+    "guokao-campus-champion": {
+      "description": "应届国考状元：应届备考视角、系统化国考经验",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#95e1d3"
+    },
+    "shengkao-working-champion": {
+      "description": "在职省考状元：在职备考视角、地区语境下的高效省考经验",
       "mode": "subagent",
       "tools": {
         "read": true,
@@ -130,6 +139,16 @@
         "glob": true
       },
       "color": "#f8b195"
+    },
+    "shengkao-campus-champion": {
+      "description": "应届省考状元：应届备考视角、地区语境下的体系化省考经验",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#f67280"
     }
   }
 }

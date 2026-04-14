@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest"
 
 import { CoachingPlugin } from "../../plugins/coaching-tools.js"
+import { saveNameClaim } from "../../plugins/coaching-tools/storage/identity-index-repository.js"
 import { cleanupTempWorktree, createTempWorktree } from "../setup/temp-worktree.js"
 
 const worktrees: string[] = []
@@ -33,152 +34,126 @@ describe("tool contracts", () => {
     expect(available).toContain("未被使用")
     expect(created).toContain("创建成功")
     expect(loaded).toContain("欢迎回来")
+    expect(created).not.toContain("积分")
+    expect(created).not.toContain("等级")
+    expect(loaded).not.toContain("积分")
+    expect(loaded).not.toContain("等级")
   })
 
-  it("supports the structured timer start path and returns attempt metadata", async () => {
+  it("returns a structured classic-example template from question-generator", async () => {
     const worktree = await withWorktree()
     const plugin = await CoachingPlugin({} as never)
     const userProfileTool = plugin.tool?.["user-profile"]
-    const timerTool = plugin.tool?.timer
+    const questionGeneratorTool = plugin.tool?.["question-generator"]
 
     await userProfileTool!.execute({ action: "loadOrCreate", username: "timer-user" }, { worktree, sessionID: "session-1" } as never)
 
-    const started = await timerTool!.execute({
-      action: "start",
+    const generated = await questionGeneratorTool!.execute({
       username: "timer-user",
       subject: "判断推理",
       leafTopic: "逻辑判断",
-      questionId: "question-1",
-      questionText: "题目: ... 正确答案: A",
-      correctAnswer: "A",
-      timeout: 180,
     }, { worktree, sessionID: "session-1" } as never)
 
-    expect(started).toContain("attemptId=")
-    expect(started).toContain("epoch=")
+    const payload = JSON.parse(generated) as { subject: string; leafTopic: string; teacherPrompt: string }
+
+    expect(payload.subject).toBe("判断推理")
+    expect(payload.leafTopic).toBe("逻辑判断")
+    expect(payload.teacherPrompt).toContain("代表性经典例题")
   })
 
-  it("rejects the legacy in-memory timer fallback contract", async () => {
+  it("does not read blocked profiles through question-generator", async () => {
     const worktree = await withWorktree()
     const plugin = await CoachingPlugin({} as never)
-    const timerTool = plugin.tool?.timer
+    const questionGeneratorTool = plugin.tool?.["question-generator"]
 
-    const started = await timerTool!.execute({
-      action: "start",
-      questionId: "legacy-question",
-      timeout: 60,
+    await saveNameClaim(worktree, {
+      displayName: "blocked-user",
+      state: "blocked",
+      profileId: null,
+      reason: "duplicate identity under repair",
+      updatedAt: "2026-01-02T03:04:05.000Z",
+    })
+
+    const result = await questionGeneratorTool!.execute({
+      username: "blocked-user",
+    }, { worktree, sessionID: "session-blocked" } as never)
+
+    expect(result).toContain("冲突/修复状态")
+  })
+
+  it("falls back to the saved profile exam context when question-generator args omit it", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const userProfileTool = plugin.tool?.["user-profile"]
+    const questionGeneratorTool = plugin.tool?.["question-generator"]
+    const originalRandom = Math.random
+
+    await userProfileTool!.execute({
+      action: "loadOrCreate",
+      username: "context-user",
+      examTypes: ["shengkao"],
+      region: "广东",
+    }, { worktree, sessionID: "session-context" } as never)
+
+    Math.random = () => 0.99
+    try {
+      const generated = await questionGeneratorTool!.execute({
+        username: "context-user",
+      }, { worktree, sessionID: "session-context" } as never)
+
+      const payload = JSON.parse(generated) as { subject: string }
+      expect(payload.subject).toBe("科学推理")
+    } finally {
+      Math.random = originalRandom
+    }
+  })
+
+  it("supports the simplified grading contract without attempt state", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const gradingTool = plugin.tool?.grading
+
+    const correct = await gradingTool!.execute({
+      questionType: "objective",
+      correctAnswer: "A",
+      userAnswer: "A",
+    }, { worktree, sessionID: "session-legacy" } as never)
+    const subjective = await gradingTool!.execute({
+      questionType: "subjective",
+      correctAnswer: "参考答案",
+      userAnswer: "主观作答",
     }, { worktree, sessionID: "session-legacy" } as never)
 
-    expect(started).toContain("durable attempt 流程")
+    expect(correct).toBe("correct")
+    expect(subjective).toContain("subjective")
   })
 
-  it("supports the new attempt-backed grading and points settlement path", async () => {
+  it("returns the expected wrong-answer marker for objective grading", async () => {
     const worktree = await withWorktree()
     const plugin = await CoachingPlugin({} as never)
-    const userProfileTool = plugin.tool?.["user-profile"]
-    const timerTool = plugin.tool?.timer
-    const gradingTool = plugin.tool?.grading
-    const pointsTool = plugin.tool?.points
-
-    await userProfileTool!.execute({ action: "loadOrCreate", username: "settlement-user" }, { worktree, sessionID: "session-2" } as never)
-
-    const started = await timerTool!.execute({
-      action: "start",
-      username: "settlement-user",
-      subject: "判断推理",
-      leafTopic: "逻辑判断",
-      questionId: "question-2",
-      questionText: "题目: ... 正确答案: A",
-      correctAnswer: "A",
-      timeout: 180,
-    }, { worktree, sessionID: "session-2" } as never)
-
-    const attemptId = /attemptId=([^\s|]+)/.exec(started)?.[1]
-    expect(attemptId).toBeTruthy()
-
-    const graded = await gradingTool!.execute({
-      questionType: "objective",
-      correctAnswer: "A",
-      userAnswer: "A",
-      attemptId,
-      timeSeconds: 12,
-    }, { worktree, sessionID: "session-2" } as never)
-
-    const settled = await pointsTool!.execute({
-      action: "award",
-      username: "settlement-user",
-      attemptId,
-    }, { worktree, sessionID: "session-2" } as never)
-
-    expect(graded).toBe("correct")
-    expect(settled).toContain("+10积分")
-    expect(settled).toContain(`attemptId=${attemptId}`)
-  })
-
-  it("invalidates the previous user's timer session when a new profile is loaded", async () => {
-    const worktree = await withWorktree()
-    const plugin = await CoachingPlugin({} as never)
-    const userProfileTool = plugin.tool?.["user-profile"]
-    const timerTool = plugin.tool?.timer
-
-    await userProfileTool!.execute({ action: "loadOrCreate", username: "first-user" }, { worktree, sessionID: "session-switch" } as never)
-    const started = await timerTool!.execute({
-      action: "start",
-      username: "first-user",
-      subject: "判断推理",
-      leafTopic: "逻辑判断",
-      questionId: "question-switch",
-      questionText: "题目: ... 正确答案: A",
-      correctAnswer: "A",
-      timeout: 180,
-    }, { worktree, sessionID: "session-switch" } as never)
-
-    const oldEpoch = Number(/epoch=([^\s|]+)/.exec(started)?.[1] ?? "0")
-    expect(oldEpoch).toBeGreaterThan(0)
-
-    await userProfileTool!.execute({ action: "loadOrCreate", username: "second-user" }, { worktree, sessionID: "session-switch" } as never)
-
-    const status = await timerTool!.execute({
-      action: "status",
-      expectedEpoch: oldEpoch,
-    }, { worktree, sessionID: "session-switch" } as never)
-
-    expect(status).toContain("当前会话已切换用户或题目")
-  })
-
-  it("returns an error when grading an attempt that can no longer transition", async () => {
-    const worktree = await withWorktree()
-    const plugin = await CoachingPlugin({} as never)
-    const userProfileTool = plugin.tool?.["user-profile"]
-    const timerTool = plugin.tool?.timer
     const gradingTool = plugin.tool?.grading
 
-    await userProfileTool!.execute({ action: "loadOrCreate", username: "grading-user" }, { worktree, sessionID: "session-grade" } as never)
-    const started = await timerTool!.execute({
-      action: "start",
-      username: "grading-user",
-      subject: "判断推理",
-      leafTopic: "逻辑判断",
-      questionId: "question-grade",
-      questionText: "题目: ... 正确答案: A",
-      correctAnswer: "A",
-      timeout: 180,
-    }, { worktree, sessionID: "session-grade" } as never)
-
-    const attemptId = /attemptId=([^\s|]+)/.exec(started)?.[1]
-    expect(attemptId).toBeTruthy()
-
-    await timerTool!.execute({ action: "abandon" }, { worktree, sessionID: "session-grade" } as never)
-
-    const graded = await gradingTool!.execute({
+    const wrong = await gradingTool!.execute({
       questionType: "objective",
-      correctAnswer: "A",
+      correctAnswer: "B",
       userAnswer: "A",
-      attemptId,
-      timeSeconds: 3,
-    }, { worktree, sessionID: "session-grade" } as never)
+    }, { worktree, sessionID: "session-wrong" } as never)
 
-    expect(graded).toContain("当前无法判题")
+    expect(wrong).toBe("wrong|B")
+  })
+
+  it("exports documents through the public export tool", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const exportTool = plugin.tool?.["export-document"]
+
+    const result = await exportTool!.execute({
+      format: "markdown",
+      title: "当前会话总结",
+      content: "这是导出内容",
+    }, { worktree, sessionID: "session-2" } as never)
+
+    expect(result).toContain("已导出到 output/")
   })
 
   it("routes profile rename through the durable identity index", async () => {
@@ -199,22 +174,16 @@ describe("tool contracts", () => {
     expect(loaded).toContain("欢迎回来")
   })
 
-  it("rejects deprecated direct mastery writes from the public tool", async () => {
+  it("directs overwrite confirmations to the overwrite action", async () => {
     const worktree = await withWorktree()
     const plugin = await CoachingPlugin({} as never)
     const userProfileTool = plugin.tool?.["user-profile"]
 
-    await userProfileTool!.execute({ action: "loadOrCreate", username: "mastery-user" }, { worktree, sessionID: "session-mastery" } as never)
+    await userProfileTool!.execute({ action: "loadOrCreate", username: "existing-user" }, { worktree, sessionID: "session-overwrite" } as never)
 
-    const result = await userProfileTool!.execute({
-      action: "updateMastery",
-      username: "mastery-user",
-      subject: "判断推理",
-      leafTopic: "逻辑判断",
-      correct: true,
-      timeSeconds: 12,
-    }, { worktree, sessionID: "session-mastery" } as never)
+    const checkName = await userProfileTool!.execute({ action: "checkName", username: "existing-user" }, { worktree, sessionID: "session-overwrite" } as never)
 
-    expect(result).toContain("updateMastery 已停用")
+    expect(checkName).toContain("调用 overwrite 覆盖")
+    expect(checkName).not.toContain("调用 loadOrCreate 覆盖")
   })
 })

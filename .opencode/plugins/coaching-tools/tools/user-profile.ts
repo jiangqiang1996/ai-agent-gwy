@@ -3,21 +3,18 @@ import { tool } from "@opencode-ai/plugin"
 import { REGIONS } from "../shared/constants.js"
 import { formatExamTypes, normalizeExamTypes } from "../shared/formatters.js"
 import { checkNameAvailability, createProfile, loadProfile, overwriteProfile, saveStudyPlanForProfile, updateProfileDetails } from "../services/profile-service.js"
-import { switchSessionProfile } from "../services/timer-service.js"
+import { switchSessionProfile } from "../services/session-service.js"
 import { loadProfileByName } from "../runtime/profile-helpers.js"
 
 export function createUserProfileTool() {
   return tool({
-    description: "用户档案管理。操作: checkName(检查名字是否已存在), loadOrCreate(加载或创建用户), getStats(获取学习统计), updateMastery(更新答题记录), updateProfile(更新资料), saveStudyPlan(保存学习计划), overwrite(覆盖已有用户档案,不可恢复)。每次调用必须传 username 参数。重要流程: 用户报名字后必须先调用 checkName 检查名字是否已被使用，如果已存在则提醒用户选择: 1.加载已有档案 2.换个名字 3.覆盖(调用 overwrite)。checkName 返回可用后才能调用 loadOrCreate。",
+    description: "用户档案管理。操作: checkName(检查名字是否已存在), loadOrCreate(加载或创建用户), getStats(获取学习统计), updateProfile(更新资料), saveStudyPlan(保存学习计划), overwrite(覆盖已有档案,不可恢复)。每次调用必须传 username 参数。重要流程: 用户报名字后必须先调用 checkName 检查名字是否已被使用，如果已存在则提醒用户选择: 1.加载已有档案 2.换个名字 3.覆盖(调用 overwrite)。checkName 返回可用后才能调用 loadOrCreate。",
     args: {
-      action: tool.schema.enum(["checkName", "loadOrCreate", "getStats", "updateMastery", "updateProfile", "saveStudyPlan", "overwrite"]).describe("操作类型"),
+      action: tool.schema.enum(["checkName", "loadOrCreate", "getStats", "updateProfile", "saveStudyPlan", "overwrite"]).describe("操作类型"),
       username: tool.schema.string().describe("用户名"),
-      subject: tool.schema.string().optional().describe("科目 (updateMastery 时必填)"),
-      leafTopic: tool.schema.string().optional().describe("叶子题型 (updateMastery 时可选)"),
-      correct: tool.schema.boolean().optional().describe("是否正确 (updateMastery 时必填)"),
-      timeSeconds: tool.schema.number().optional().describe("答题耗时秒数 (updateMastery 时必填)"),
       examTypes: tool.schema.array(tool.schema.string()).optional().describe("考试类型数组 (loadOrCreate/updateProfile 时可选)"),
       region: tool.schema.string().optional().describe("地区/省份 (loadOrCreate/updateProfile 时可选)"),
+      identity: tool.schema.enum(["working", "campus", "unset"]).optional().describe("身份 (working=在职, campus=应届生, unset=清空)"),
       newName: tool.schema.string().optional().describe("新名字 (updateProfile 时可选)"),
       planContent: tool.schema.string().optional().describe("学习计划内容 (saveStudyPlan 时必填)"),
     },
@@ -29,7 +26,7 @@ export function createUserProfileTool() {
             const availability = await checkNameAvailability(worktree, args.username)
             if (availability.status === "existing" && availability.profile) {
               const existing = availability.profile
-              return `名字 "${args.username}" 已存在（Lv.${existing.level}，${existing.points}积分，${existing.history.length}条答题记录）。请让用户选择：\n1. 这是我的账号 → 确认后调用 loadOrCreate 加载已有档案\n2. 换一个新名字 → 用户重新报名字后再 checkName\n3. 覆盖原有账号 → 提醒用户这是不可恢复的操作，确认后可调用 loadOrCreate 覆盖`
+              return `名字 "${args.username}" 已存在（${existing.history.length}条学习记录，考试类型: ${formatExamTypes(existing.examTypes)}，地区: ${existing.region || "未设置"}）。请让用户选择：\n1. 这是我的账号 → 确认后调用 loadOrCreate 加载已有档案\n2. 换一个新名字 → 用户重新报名字后再 checkName\n3. 覆盖原有账号 → 提醒用户这是不可恢复的操作，确认后调用 overwrite 覆盖`
             }
             if (availability.status === "blocked") {
               return `名字 "${args.username}" 当前处于修复/冲突状态，暂时不能直接创建或加载。请先让用户确认是否需要修复旧档案。`
@@ -43,6 +40,7 @@ export function createUserProfileTool() {
                 username: args.username,
                 examTypes: args.examTypes,
                 region: args.region,
+                identity: args.identity === "unset" ? null : args.identity,
               })
               if (created.status !== "created" || !created.profile) {
                 return `Error: 无法创建用户 ${args.username}`
@@ -52,7 +50,7 @@ export function createUserProfileTool() {
                 sessionId: context.sessionID,
                 profileId: profile.id,
               })
-              return `新用户 ${args.username} 创建成功。ID: ${profile.id}, 积分: 0, 等级: 1, 考试类型: ${formatExamTypes(profile.examTypes)}, 地区: ${profile.region || "未设置"}`
+              return `新用户 ${args.username} 创建成功。ID: ${profile.id}, 身份: ${profile.identity === "working" ? "在职" : profile.identity === "campus" ? "应届生" : "未设置"}, 考试类型: ${formatExamTypes(profile.examTypes)}, 地区: ${profile.region || "未设置"}`
             }
             if (availability.status === "blocked") {
               return `Error: 用户 ${args.username} 当前处于冲突/修复状态，不能直接 loadOrCreate`
@@ -69,14 +67,14 @@ export function createUserProfileTool() {
             const totalQ = profile.history.length
             const totalCorrect = profile.history.filter(entry => entry.correct).length
             const accuracy = totalQ > 0 ? Math.round((totalCorrect / totalQ) * 100) : 0
-            return `欢迎回来，${profile.name}！等级: Lv.${profile.level}, 积分: ${profile.points}, 已答题: ${totalQ}题, 正确率: ${accuracy}%, 连续正确: ${profile.streak.current}题, 考试类型: ${formatExamTypes(profile.examTypes)}, 地区: ${profile.region || "未设置"}`
+            return `欢迎回来，${profile.name}！身份: ${profile.identity === "working" ? "在职" : profile.identity === "campus" ? "应届生" : "未设置"}, 已记录: ${totalQ}条学习记录, 正确率: ${accuracy}%, 考试类型: ${formatExamTypes(profile.examTypes)}, 地区: ${profile.region || "未设置"}`
           }
           case "getStats": {
             const profile = loadProfileByName(worktree, args.username)
             if (!profile) return `Error: 用户 ${args.username} 不存在`
             const lines: string[] = []
             lines.push(`=== ${profile.name} 的学习数据 ===`)
-            lines.push(`积分: ${profile.points} | 等级: Lv.${profile.level} | 连续正确: ${profile.streak.current} (最佳: ${profile.streak.best})`)
+            lines.push(`身份: ${profile.identity === "working" ? "在职" : profile.identity === "campus" ? "应届生" : "未设置"}`)
             lines.push("")
             for (const [subject, data] of Object.entries(profile.mastery)) {
               const accuracy = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0
@@ -94,12 +92,6 @@ export function createUserProfileTool() {
             }
             return lines.join("\n")
           }
-          case "updateMastery": {
-            if (!args.subject || args.correct === undefined || args.timeSeconds === undefined) {
-              return "Error: updateMastery 需要 subject, correct, timeSeconds 参数"
-            }
-            return "Error: updateMastery 已停用。请改走 timer -> grading -> points 的 attempt-backed 流程，避免重复写入 mastery/history"
-          }
           case "saveStudyPlan": {
             if (!args.planContent) return "Error: saveStudyPlan 需要 planContent 参数"
             const saved = await saveStudyPlanForProfile(worktree, args.username, args.planContent)
@@ -115,6 +107,7 @@ export function createUserProfileTool() {
               newName: args.newName,
               examTypes: args.examTypes !== undefined ? (Array.isArray(args.examTypes) ? normalizeExamTypes(args.examTypes) : []) : undefined,
               region: args.region,
+              identity: args.identity === "unset" ? null : args.identity,
             })
             if (updated.status === "not_found") return `Error: 用户 ${args.username} 不存在`
             if (updated.status === "conflict" || updated.status === "blocked") return `Error: ${updated.reason}`
@@ -138,6 +131,7 @@ export function createUserProfileTool() {
               username: args.username,
               examTypes: args.examTypes,
               region: args.region,
+              identity: args.identity === "unset" ? null : args.identity,
             })
             if (overwritten.status === "not_found") {
               return `Error: 用户 "${args.username}" 不存在，无法覆盖。请直接使用 loadOrCreate 创建。`
@@ -151,7 +145,7 @@ export function createUserProfileTool() {
                 profileId: overwritten.profile.id,
               })
             }
-            return `已覆盖用户 "${args.username}" 的旧档案。新档案已创建，积分重置为 0。`
+            return `已覆盖用户 "${args.username}" 的旧档案。新档案已创建。`
           }
           default:
             return `Error: 未知操作 ${args.action}`

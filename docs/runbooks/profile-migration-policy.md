@@ -8,9 +8,9 @@
 
 | 分类 | 适用情况 | 允许行为 |
 |---|---|---|
-| `lazy` | 仅缺少 `id`、`examTypes`、`region`、`studyPlan` 等 shape 字段；其余核心结构完整 | 允许运行时自动补齐并写回标准化档案 |
-| `blocked` | duplicate name / duplicate id、未知 `examTypes`、无效 `region`、无效 `studyPlan`、局部迁移残留等“可解析但语义不安全”的档案 | 禁止自动写回；必须经 repair 流程处理 |
-| `quarantine` | JSON 无法解析、核心字段缺失、streak/mastery/history 结构损坏等无法做确定性修复的档案 | 禁止自动修复；必须人工确认后再处理 |
+| `lazy` | 仅缺少 `id`、`examTypes`、`region`、`studyPlan`、`identity` 等 shape 字段，或缺少已降级为 legacy 的 `points/level/streak` 字段；其余核心结构完整 | 允许运行时自动补齐并写回标准化档案 |
+| `blocked` | duplicate name / duplicate id、未知 `examTypes`、无效 `region`、无效 `studyPlan`、无效 `identity`、局部 legacy score 字段损坏等“可解析但语义不安全”的档案 | 禁止自动写回；必须经 repair 流程处理 |
+| `quarantine` | JSON 无法解析、核心字段缺失、mastery/history 结构损坏等无法做确定性修复的档案 | 禁止自动修复；必须人工确认后再处理 |
 
 ## Repair Script
 

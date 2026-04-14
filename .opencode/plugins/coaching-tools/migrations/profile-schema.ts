@@ -2,7 +2,7 @@ import { randomUUID } from "crypto"
 
 import { REGIONS } from "../shared/constants.js"
 import { normalizeExamTypes } from "../shared/formatters.js"
-import type { StudyPlan, UserProfile } from "../shared/types.js"
+import type { StudyPlan, UserIdentity, UserProfile } from "../shared/types.js"
 
 export const PROFILE_SCHEMA_VERSION = 1
 
@@ -28,6 +28,12 @@ function parseStudyPlan(value: unknown): StudyPlan | null | "blocked" {
   if (!isRecord(value)) return "blocked"
   if (typeof value.content !== "string" || typeof value.createdAt !== "string") return "blocked"
   return { content: value.content, createdAt: value.createdAt }
+}
+
+function parseIdentity(value: unknown): UserIdentity | null | "blocked" {
+  if (value === undefined || value === null || value === "") return null
+  if (value === "working" || value === "campus") return value
+  return "blocked"
 }
 
 function hasValidStreak(value: unknown): value is { current: number; best: number } {
@@ -61,19 +67,33 @@ export function migrateProfileRecord(raw: unknown): ProfileMigrationResult {
     }
   }
 
-  if (typeof raw.createdAt !== "string" || typeof raw.points !== "number" || typeof raw.level !== "number") {
+  if (typeof raw.createdAt !== "string") {
     return {
       classification: "quarantine",
-      issues: [{ code: "missing-core-fields", message: "用户档案缺少 createdAt/points/level 等核心字段" }],
+      issues: [{ code: "missing-core-fields", message: "用户档案缺少 createdAt 等核心字段" }],
       profile: null,
     }
   }
 
-  if (!hasValidStreak(raw.streak) || !hasValidMastery(raw.mastery) || !hasValidHistory(raw.history)) {
+  if (!hasValidMastery(raw.mastery) || !hasValidHistory(raw.history)) {
     return {
       classification: "quarantine",
-      issues: [{ code: "invalid-core-shape", message: "用户档案的 streak/mastery/history 结构无效" }],
+      issues: [{ code: "invalid-core-shape", message: "用户档案的 mastery/history 结构无效" }],
       profile: null,
+    }
+  }
+
+  const hasLegacyScoreFields = raw.points !== undefined || raw.level !== undefined || raw.streak !== undefined
+  const legacyPoints = typeof raw.points === "number" ? raw.points : undefined
+  const legacyLevel = typeof raw.level === "number" ? raw.level : undefined
+  const legacyStreak = hasValidStreak(raw.streak) ? raw.streak : undefined
+  if (hasLegacyScoreFields) {
+    if (legacyPoints === undefined || legacyLevel === undefined || legacyStreak === undefined) {
+      return {
+        classification: "blocked",
+        issues: [{ code: "invalid-legacy-score", message: "legacy score 字段不完整或结构不合法，需人工修复" }],
+        profile: null,
+      }
     }
   }
 
@@ -116,6 +136,15 @@ export function migrateProfileRecord(raw: unknown): ProfileMigrationResult {
     }
   }
 
+  const identity = parseIdentity(raw.identity)
+  if (identity === "blocked") {
+    return {
+      classification: "blocked",
+      issues: [{ code: "invalid-identity", message: "identity 只能是 working/campus，需人工修复" }],
+      profile: null,
+    }
+  }
+
   if (typeof raw.id !== "string" || raw.id.trim() === "") {
     issues.push({ code: "missing-id", message: "旧档案缺少 id，可安全补齐" })
   }
@@ -141,9 +170,14 @@ export function migrateProfileRecord(raw: unknown): ProfileMigrationResult {
       id: typeof raw.id === "string" && raw.id.trim() !== "" ? raw.id : randomUUID(),
       name: raw.name,
       createdAt: raw.createdAt,
-      points: raw.points,
-      level: raw.level,
-      streak: raw.streak,
+      identity,
+      ...(hasLegacyScoreFields ? {
+        legacyScore: {
+          points: legacyPoints!,
+          level: legacyLevel!,
+          streak: legacyStreak!,
+        },
+      } : {}),
       mastery: raw.mastery,
       history: raw.history,
       examTypes: normalizedExamTypes,

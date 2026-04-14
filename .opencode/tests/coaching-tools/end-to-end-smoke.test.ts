@@ -19,62 +19,45 @@ async function withWorktree(): Promise<string> {
 }
 
 describe("end-to-end smoke", () => {
-  it("runs the attempt-backed practice flow from profile creation to stats", async () => {
+  it("runs the summary/example/export flow from profile creation to stats", async () => {
     const worktree = await withWorktree()
     const plugin = await CoachingPlugin({} as never)
 
     const userProfileTool = plugin.tool?.["user-profile"]
-    const timerTool = plugin.tool?.timer
+    const questionGeneratorTool = plugin.tool?.["question-generator"]
     const gradingTool = plugin.tool?.grading
-    const pointsTool = plugin.tool?.points
+    const exportTool = plugin.tool?.["export-document"]
 
     const created = await userProfileTool!.execute({
       action: "loadOrCreate",
       username: "smoke-user",
       examTypes: ["guokao"],
       region: "重庆",
+      identity: "campus",
     }, { worktree, sessionID: "session-smoke" } as never)
 
     expect(created).toContain("创建成功")
+    expect(created).toContain("应届生")
 
-    const started = await timerTool!.execute({
-      action: "start",
+    const generated = await questionGeneratorTool!.execute({
       username: "smoke-user",
       subject: "判断推理",
       leafTopic: "逻辑判断",
-      questionId: "question-smoke",
-      questionText: "题目: 某逻辑判断题\nA. 选项A\nB. 选项B\nC. 选项C\nD. 选项D\n正确答案: A\n解析: ...",
-      correctAnswer: "A",
-      timeout: 180,
     }, { worktree, sessionID: "session-smoke" } as never)
 
-    const attemptId = /attemptId=([^\s|]+)/.exec(started)?.[1]
-    const epoch = /epoch=([^\s|]+)/.exec(started)?.[1]
-
-    expect(attemptId).toBeTruthy()
-    expect(epoch).toBeTruthy()
-
-    const stopped = await timerTool!.execute({
-      action: "stop",
-      expectedEpoch: Number(epoch),
-    }, { worktree, sessionID: "session-smoke" } as never)
-
-    const elapsed = Number(/^(\d+)/.exec(stopped)?.[1] ?? "0")
-    expect(stopped).toContain(`attemptId=${attemptId}`)
-    expect(elapsed).toBeGreaterThanOrEqual(0)
+    const example = JSON.parse(generated) as { teacherPrompt: string }
+    expect(example.teacherPrompt).toContain("经典例题")
 
     const graded = await gradingTool!.execute({
       questionType: "objective",
       correctAnswer: "A",
       userAnswer: "A",
-      attemptId,
-      timeSeconds: elapsed,
     }, { worktree, sessionID: "session-smoke" } as never)
 
-    const settled = await pointsTool!.execute({
-      action: "award",
-      username: "smoke-user",
-      attemptId,
+    const exported = await exportTool!.execute({
+      format: "markdown",
+      title: "判断推理总结",
+      content: "知识点总结\n\n经典例题",
     }, { worktree, sessionID: "session-smoke" } as never)
 
     const stats = await userProfileTool!.execute({
@@ -83,8 +66,7 @@ describe("end-to-end smoke", () => {
     }, { worktree, sessionID: "session-smoke" } as never)
 
     expect(graded).toBe("correct")
-    expect(settled).toContain("+10积分")
-    expect(stats).toContain("判断推理")
-    expect(stats).toContain("逻辑判断")
+    expect(exported).toContain("已导出到 output/")
+    expect(stats).toContain("身份: 应届生")
   })
 })

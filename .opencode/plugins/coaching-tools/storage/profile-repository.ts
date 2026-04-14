@@ -93,6 +93,7 @@ export async function saveProfileRecord(worktree: string, profile: UserProfile):
     ...profile,
     schemaVersion: profile.schemaVersion ?? 1,
     profileVersion: profile.profileVersion ?? 0,
+    identity: profile.identity ?? null,
   }
   const filePath = getProfilePathById(worktree, nextProfile.id)
   const legacyPath = join(worktree, USERS_DIR, `${nextProfile.name}.json`)

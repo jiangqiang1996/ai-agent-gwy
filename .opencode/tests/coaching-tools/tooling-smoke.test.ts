@@ -11,10 +11,9 @@ describe("coaching tools test baseline", () => {
     const tools = plugin.tool ?? {}
 
     expect(Object.keys(tools).sort()).toEqual([
+      "export-document",
       "grading",
-      "points",
       "question-generator",
-      "timer",
       "user-profile",
     ])
   })

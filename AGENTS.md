@@ -11,6 +11,7 @@
 - `.opencode/rules/` — 共享提示词规则
 - `.opencode/skills/` — 技能 (用户主动触发的操作)
 - `data/users/` — 用户档案 (JSON, gitignored)
+- `output/` — 导出文件与运行报告
 - `docs/brainstorms/` — 需求文档
 - `docs/plans/` — 技术规划
 
@@ -18,7 +19,7 @@
 
 所有代理使用可读的英文短横线命名：
 - 老师: `xingce-zong-teacher`, `xingce-yanyu-teacher`, `shenlun-zong-teacher` 等
-- 学生: `guokao-champion`, `chongqing-champion`, `xingce-first` 等
+- 学生: `guokao-working-champion`, `guokao-campus-champion`, `shengkao-working-champion`, `shengkao-campus-champion` 等
 - 特殊: `orchestrator` (编排器), `exam-info-teacher` (考情教研), `time-management-teacher` (时间管理)
 - **禁止** 使用纯数字命名 (如 `666`, `667`)
 
@@ -50,7 +51,7 @@
 
 ## 提示词去重规范
 
-- 共享考试上下文、练题闭环、输出格式等规则放在 `.opencode/rules/`
+- 共享考试上下文、状元路由、截图工作流、导出流程、输出格式等规则放在 `.opencode/rules/`
 - agent 文件只保留角色专属内容，不复制共享说明
 - 修改运行时契约时，优先同步 `.opencode/rules/` 与 `orchestrator.md`
 
@@ -67,7 +68,7 @@
 
 ## 分阶段实现
 
-- Phase 1: 行测教练 (全行测 6 模块 + 2 状元学生 + 出题/计时/判题/积分)
-- Phase 2: 行测完整 (叶子题型老师 + 针对性出题 + 完整积分)
+- Phase 1: 行测总结优先 (全行测 6 模块 + 4 个状元骨架 + 知识点总结 + 经典例题 + 截图讲题 + 导出)
+- Phase 2: 行测完整 (叶子题型老师 + 更细知识画像 + 更强截图解析)
 - Phase 3: 申论与主观题 (申论老师 + 分级评分)
-- Phase 4: 事业单位与完整体系 (事业单位老师 + 差生 + 时间管理 + 考情)
+- Phase 4: 事业单位与完整体系 (事业单位老师 + 更完整身份/地区体系 + 时间管理 + 考情)

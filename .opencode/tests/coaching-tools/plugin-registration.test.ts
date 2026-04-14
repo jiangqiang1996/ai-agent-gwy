@@ -5,10 +5,9 @@ import { registerCoachingTools } from "../../plugins/coaching-tools/register-too
 describe("plugin registration", () => {
   it("keeps the stable public tool registry", () => {
     expect(Object.keys(registerCoachingTools()).sort()).toEqual([
+      "export-document",
       "grading",
-      "points",
       "question-generator",
-      "timer",
       "user-profile",
     ])
   })

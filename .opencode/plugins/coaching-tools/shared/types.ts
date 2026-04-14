@@ -26,15 +26,22 @@ export interface StudyPlan {
   createdAt: string
 }
 
+export type UserIdentity = "working" | "campus"
+
+export interface LegacyScoreSnapshot {
+  points: number
+  level: number
+  streak: { current: number; best: number }
+}
+
 export interface UserProfile {
   schemaVersion?: number
   profileVersion?: number
   id: string
   name: string
   createdAt: string
-  points: number
-  level: number
-  streak: { current: number; best: number }
+  identity?: UserIdentity | null
+  legacyScore?: LegacyScoreSnapshot
   mastery: Record<string, SubjectMastery>
   history: HistoryEntry[]
   examTypes: string[]

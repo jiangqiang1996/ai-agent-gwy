@@ -11,7 +11,9 @@ async function readPromptAsset(relativePath: string): Promise<string> {
 describe("prompt assets", () => {
   it("ships the shared rules required by the new prompt architecture", async () => {
     await expect(readPromptAsset("rules/exam-context.md")).resolves.toContain("考试上下文共享规则")
-    await expect(readPromptAsset("rules/practice-lifecycle.md")).resolves.toContain("attempt-backed")
+    await expect(readPromptAsset("rules/champion-routing.md")).resolves.toContain("状元路由共享规则")
+    await expect(readPromptAsset("rules/summary-first-workflow.md")).resolves.toContain("总结优先工作流")
+    await expect(readPromptAsset("rules/export-workflow.md")).resolves.toContain("导出工作流共享规则")
     await expect(readPromptAsset("rules/output-format.md")).resolves.toContain("输出格式共享规则")
     await expect(readPromptAsset("rules/prompt-authoring.md")).resolves.toContain("提示词编写规则")
   })
@@ -33,12 +35,14 @@ describe("prompt assets", () => {
     }
   })
 
-  it("updates orchestrator to the attempt-backed practice flow", async () => {
+  it("updates orchestrator to consume summary-first and champion-routing rules", async () => {
     const content = await readPromptAsset("agents/orchestrator.md")
 
-    expect(content).toContain("attemptId")
-    expect(content).toContain("epoch")
-    expect(content).toContain("不再对同一题额外调用 user-profile updateMastery")
+    expect(content).toContain("共享规则选中的状元代理")
+    expect(content).toContain(".opencode/rules/champion-routing.md")
+    expect(content).toContain(".opencode/rules/summary-first-workflow.md")
+    expect(content).toContain("截图题目讲解遵循")
+    expect(content).toContain("身份=[用户identity]")
   })
 
   it("keeps the political theory prompt typo fixed", async () => {

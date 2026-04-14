@@ -2,51 +2,51 @@
 
 ## Scope
 
-用于验证 coaching-tools 重构后的主链路、迁移行为和会话状态。
+用于验证 summary-first 产品方向下的主链路、迁移行为与导出能力。
 
 ## Manual Smoke Steps
 
 1. 新用户创建
 - 调用 `user-profile checkName`
 - 调用 `user-profile loadOrCreate`
-- 确认返回新建档案信息
+- 补充考试类型 / 身份 / 地区
+- 确认返回的新档案信息不再展示积分、等级、连胜
 
-2. 结构化练题闭环
-- 调用 `question-generator`
-- 让老师返回结构化题目（题目、选项、正确答案、解析）
-- 调用 `timer start`，确认返回 `attemptId` 和 `epoch`
-- 调用 `timer stop`，确认返回耗时和相同 `attemptId`
-- 调用 `grading`（传 `attemptId`、`timeSeconds`）
-- 调用 `points`（传 `attemptId`）
-- 确认 history、积分、mastery 只写入一次
+2. 知识点总结
+- 请求总结某个模块或题型
+- 确认回答先给知识框架，再补易错点或经典例题
 
-3. Session epoch
-- 在 active attempt 期间切换用户
-- 再调用 `timer status` / `timer stop`
-- 确认返回 stale session 错误，而不是继续使用旧 attempt
+3. 截图题讲解
+- 上传一张内容是题目的图片
+- 确认系统按截图题流程讲解，而不是要求 timer / 判题 / 积分
+- 若图片不清晰或题面不完整，确认系统要求补图或补文字，而不是硬讲
 
-4. Timeout recovery
-- 启动计时，等待超时窗口后调用 `timer status`
-- 确认 attempt 状态转为 `timed_out`
+4. 状元路由
+- 设置 `identity=working` 与 `examTypes=[guokao]`
+- 确认命中在职国考状元骨架
+- 设置 `identity=campus`、`examTypes=[shengkao]`、`region=重庆`
+- 确认命中应届省考状元骨架，并体现重庆语境
 
-5. Duplicate identity
-- 准备两个重名档案
-- 确认 `checkName` / `loadOrCreate` 不会静默写入 shadow profile
+5. 显式导出
+- 请求“导出成 markdown”
+- 请求“导出成 html”
+- 确认文件写入 `output/`
+- 确认不发生静默覆盖
 
 6. Migration report
 - 运行 `scripts/repair-user-profiles.ts`
 - 检查 `output/repair-user-profiles-report.json`
-- 确认 blocked / quarantine 记录不会被自动改写
+- 确认旧 score 字段缺失不会被误判为坏档案
 
 ## Healthy Signals
 
-- `timer start` 总能返回 `attemptId` 与 `epoch`
-- `points` 对同一 `attemptId` 第二次结算返回已处理状态，不重复加分
-- prompt 资产测试与 tool contract 测试全部通过
+- `user-profile` 返回身份/考试类型/地区相关信息，但不再返回积分、等级、连胜
+- 状元路由与 `identity + examTypes + region` 保持一致
+- prompt 资产测试、tool contract 测试、export 测试和 smoke 测试全部通过
 
 ## Failure Signals
 
-- Windows 下再次出现 `EPERM rename ... .tmp -> *.json`
-- 同一用户能同时创建两个 active attempt
-- 切换用户后旧 epoch 仍能 stop/status 成功
-- 对同一题仍额外调用 `updateMastery` 导致重复记录
+- README 或 orchestrator 仍把 timer/points 当核心能力
+- `shiyedanwei` 被错误映射到国考/省考状元
+- 截图题不清晰时系统仍假装识别成功
+- 导出在没有明确意图时自动写入 `output/`
