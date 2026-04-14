@@ -1,0 +1,16 @@
+{
+  "id": "user-a",
+  "name": "duplicate-user",
+  "createdAt": "2026-01-02T03:04:05.000Z",
+  "points": 20,
+  "level": 1,
+  "streak": {
+    "current": 0,
+    "best": 1
+  },
+  "mastery": {},
+  "history": [],
+  "examTypes": ["guokao"],
+  "region": "重庆",
+  "studyPlan": null
+}

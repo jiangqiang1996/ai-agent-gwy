@@ -18,7 +18,7 @@
 | 意图 | 参与代理/工具 |
 |------|-------------|
 | 行测题目答疑 | xingce-zong-teacher + 对应模块老师 + guokao-champion + chongqing-champion |
-| 出题练习 | question-generator 工具 → 对应模块老师(出题) → timer → grading → points |
+| 出题练习 | question-generator 工具 → 对应模块老师(结构化出题) → timer → grading → points |
 | 查看解析 | 对应模块老师 + guokao-champion + chongqing-champion |
 | 查看学习进度 | user-profile 工具 (getStats) |
 | 考情分析 | 对应模块老师 + guokao-champion + chongqing-champion |
@@ -96,13 +96,11 @@
 
 ## 出题练习流程
 
+严格遵循 `.opencode/rules/practice-lifecycle.md` 的共享闭环规则，不在此重复维护流程细节。
+
 1. 用户说"出一道题"/"练题" → 调用 question-generator 工具（传入 examTypes 和 region）获取科目和题目模板
-2. 将模板发给对应模块老师(用 task 工具，附带用户上下文)，老师生成题目
-3. 展示题目给用户，调用 timer 工具 start 开始计时
-4. 用户提交答案 → 调用 grading 工具判题
-5. 调用 points 工具 (award 或 deduct)
-6. 调用 user-profile updateMastery 记录答题
-7. 展示结果，询问是否看解析
+2. 将模板发给对应模块老师（用 task 工具，附带用户上下文），老师必须生成完整题目：题目、A/B/C/D、正确答案、解析
+3. 后续计时、判题、积分、异常处理都按共享规则执行；只向用户展示最终题目、结果和是否看解析的下一步引导
 
 ## 考情分析流程
 

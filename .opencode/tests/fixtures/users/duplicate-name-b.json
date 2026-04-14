@@ -1,0 +1,16 @@
+{
+  "id": "user-b",
+  "name": "duplicate-user",
+  "createdAt": "2026-02-03T04:05:06.000Z",
+  "points": 42,
+  "level": 2,
+  "streak": {
+    "current": 3,
+    "best": 5
+  },
+  "mastery": {},
+  "history": [],
+  "examTypes": ["shengkao"],
+  "region": "四川",
+  "studyPlan": null
+}

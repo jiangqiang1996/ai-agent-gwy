@@ -1,0 +1,12 @@
+{
+  "name": "legacy-user",
+  "createdAt": "2026-01-02T03:04:05.000Z",
+  "points": 12,
+  "level": 1,
+  "streak": {
+    "current": 1,
+    "best": 2
+  },
+  "mastery": {},
+  "history": []
+}

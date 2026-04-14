@@ -2,3 +2,5 @@
 **/package.json
 **/package-lock.json
 **/data
+!.opencode/package.json
+!.opencode/package-lock.json

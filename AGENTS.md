@@ -8,6 +8,7 @@
 
 - `.opencode/agents/` — 代理定义 (.md 文件)
 - `.opencode/plugins/` — 插件 (custom tools 注册)
+- `.opencode/rules/` — 共享提示词规则
 - `.opencode/skills/` — 技能 (用户主动触发的操作)
 - `data/users/` — 用户档案 (JSON, gitignored)
 - `docs/brainstorms/` — 需求文档
@@ -46,6 +47,17 @@
 - 每个代理发言不超过 2-3 句话
 - 必须提供独特视角，不得复述其他代理内容
 - 编排器负责合并相同观点、标注分歧、给出最终结论
+
+## 提示词去重规范
+
+- 共享考试上下文、练题闭环、输出格式等规则放在 `.opencode/rules/`
+- agent 文件只保留角色专属内容，不复制共享说明
+- 修改运行时契约时，优先同步 `.opencode/rules/` 与 `orchestrator.md`
+
+## OpenCode 配置兼容说明
+
+- 在 custom tools 的 `permission` 等价访问语义验证完成前，`opencode.json` 可以临时保留 orchestrator 的 `agent.tools` 配置作为兼容例外
+- 一旦确认 `permission` 能完整覆盖 custom tools 访问，再移除该兼容层
 
 ## 数据目录
 
