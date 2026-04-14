@@ -122,8 +122,23 @@ const XINGCE_LEAF_TOPICS: Record<string, string[]> = {
   "政治理论": ["政治理论"],
 }
 
+const EXAM_TYPE_MAP: Record<string, string> = {
+  "国考": "guokao", "guokao": "guokao",
+  "省考": "shengkao", "shengkao": "shengkao",
+  "事业单位": "shiyedanwei", "shiyedanwei": "shiyedanwei",
+}
 const EXAM_TYPES = ["guokao", "shengkao", "shiyedanwei"] as const
 type ExamType = typeof EXAM_TYPES[number]
+
+const EXAM_LABELS: Record<string, string> = { guokao: "国考", shengkao: "省考", shiyedanwei: "事业单位" }
+
+function normalizeExamTypes(raw: string[]): string[] {
+  return raw.map(t => EXAM_TYPE_MAP[t] || t).filter((t): t is ExamType => (EXAM_TYPES as readonly string[]).includes(t))
+}
+
+function formatExamTypes(types: string[]): string {
+  return types.length === 0 ? "未设置" : types.map(t => EXAM_LABELS[t] || t).join(",")
+}
 
 const EXAM_CONFIGS: Record<ExamType, {
   subjects: string[]
@@ -195,9 +210,9 @@ export const CoachingPlugin: Plugin = async (ctx) => {
   return {
     tool: {
       "user-profile": tool({
-        description: "用户档案管理。操作: loadOrCreate(加载或创建用户), getStats(获取学习统计), updateMastery(更新答题记录), updateProfile(更新资料), saveStudyPlan(保存学习计划)。每次调用必须传 username 参数。",
+        description: "用户档案管理。操作: checkName(检查名字是否已存在), loadOrCreate(加载或创建用户), getStats(获取学习统计), updateMastery(更新答题记录), updateProfile(更新资料), saveStudyPlan(保存学习计划), overwrite(覆盖已有用户档案,不可恢复)。每次调用必须传 username 参数。重要流程: 用户报名字后必须先调用 checkName 检查名字是否已被使用，如果已存在则提醒用户选择: 1.加载已有档案 2.换个名字 3.覆盖(调用 overwrite)。checkName 返回可用后才能调用 loadOrCreate。",
         args: {
-          action: tool.schema.enum(["loadOrCreate", "getStats", "updateMastery", "updateProfile", "saveStudyPlan"]).describe("操作类型"),
+          action: tool.schema.enum(["checkName", "loadOrCreate", "getStats", "updateMastery", "updateProfile", "saveStudyPlan", "overwrite"]).describe("操作类型"),
           username: tool.schema.string().describe("用户名"),
           subject: tool.schema.string().optional().describe("科目 (updateMastery 时必填)"),
           leafTopic: tool.schema.string().optional().describe("叶子题型 (updateMastery 时可选)"),
@@ -212,25 +227,31 @@ export const CoachingPlugin: Plugin = async (ctx) => {
           try {
             const worktree = context.worktree
             switch (args.action) {
+              case "checkName": {
+                const existing = findProfileByName(worktree, args.username)
+                if (existing) {
+                  return `名字 "${args.username}" 已存在（Lv.${existing.level}，${existing.points}积分，${existing.history.length}条答题记录）。请让用户选择：\n1. 这是我的账号 → 确认后调用 loadOrCreate 加载已有档案\n2. 换一个新名字 → 用户重新报名字后再 checkName\n3. 覆盖原有账号 → 提醒用户这是不可恢复的操作，确认后可调用 loadOrCreate 覆盖`
+                }
+                return `名字 "${args.username}" 未被使用，可以安全创建新用户。`
+              }
               case "loadOrCreate": {
                 const loaded = loadProfileByName(worktree, args.username)
                 if (!loaded) {
                   const profile = createUserProfile(args.username)
                   if (args.examTypes && Array.isArray(args.examTypes)) {
-                    const valid = args.examTypes.filter((t: string) => EXAM_TYPES.includes(t as ExamType))
-                    profile.examTypes = valid
+                    profile.examTypes = normalizeExamTypes(args.examTypes)
                   }
                   if (args.region && REGIONS.includes(args.region)) {
                     profile.region = args.region
                   }
                   saveProfile(worktree, profile)
-                  return `新用户 ${args.username} 创建成功。ID: ${profile.id}, 积分: 0, 等级: 1, 考试类型: ${profile.examTypes.join(",") || "未设置"}, 地区: ${profile.region || "未设置"}`
+                  return `新用户 ${args.username} 创建成功。ID: ${profile.id}, 积分: 0, 等级: 1, 考试类型: ${formatExamTypes(profile.examTypes)}, 地区: ${profile.region || "未设置"}`
                 }
                 const profile = loaded
                 const totalQ = profile.history.length
                 const totalCorrect = profile.history.filter(h => h.correct).length
                 const accuracy = totalQ > 0 ? Math.round((totalCorrect / totalQ) * 100) : 0
-                return `欢迎回来，${profile.name}！等级: Lv.${profile.level}, 积分: ${profile.points}, 已答题: ${totalQ}题, 正确率: ${accuracy}%, 连续正确: ${profile.streak.current}题, 考试类型: ${profile.examTypes.join(",") || "未设置"}, 地区: ${profile.region || "未设置"}`
+                return `欢迎回来，${profile.name}！等级: Lv.${profile.level}, 积分: ${profile.points}, 已答题: ${totalQ}题, 正确率: ${accuracy}%, 连续正确: ${profile.streak.current}题, 考试类型: ${formatExamTypes(profile.examTypes)}, 地区: ${profile.region || "未设置"}`
               }
               case "getStats": {
                 const loaded = loadProfileByName(worktree, args.username)
@@ -250,7 +271,7 @@ export const CoachingPlugin: Plugin = async (ctx) => {
                     lines.push(`  - ${leaf}: ${ld.total}题, ${la}%${ln}, 平均 ${ld.avgTimeSeconds}s`)
                   }
                 }
-                lines.push(`考试类型: ${profile.examTypes.join(",") || "未设置"} | 地区: ${profile.region || "未设置"}`)
+                lines.push(`考试类型: ${formatExamTypes(profile.examTypes)} | 地区: ${profile.region || "未设置"}`)
                 if (profile.studyPlan) {
                   lines.push(`学习计划: 已保存 (${new Date(profile.studyPlan.createdAt).toLocaleDateString("zh-CN")})`)
                 }
@@ -320,9 +341,9 @@ export const CoachingPlugin: Plugin = async (ctx) => {
                   changes.push(`名字→${profileUP.name}`)
                 }
                 if (args.examTypes !== undefined) {
-                  const valid = Array.isArray(args.examTypes) ? args.examTypes.filter((t: string) => EXAM_TYPES.includes(t as ExamType)) : []
+                  const valid = Array.isArray(args.examTypes) ? normalizeExamTypes(args.examTypes) : []
                   profileUP.examTypes = valid
-                  changes.push(`考试类型→${profileUP.examTypes.join(",") || "未设置"}`)
+                  changes.push(`考试类型→${formatExamTypes(profileUP.examTypes)}`)
                 }
                 if (args.region !== undefined) {
                   if (REGIONS.includes(args.region)) {
@@ -338,6 +359,21 @@ export const CoachingPlugin: Plugin = async (ctx) => {
                 if (changes.length === 0) return "未提供任何需要更新的字段"
                 saveProfile(worktree, profileUP)
                 return `资料已更新: ${changes.join(", ")}`
+              }
+              case "overwrite": {
+                const existingOW = findProfileByName(worktree, args.username)
+                if (!existingOW) return `Error: 用户 "${args.username}" 不存在，无法覆盖。请直接使用 loadOrCreate 创建。`
+                const oldPath = getProfilePathById(worktree, existingOW.id)
+                if (existsSync(oldPath)) { try { unlinkSync(oldPath) } catch {} }
+                const newProfile = createUserProfile(args.username)
+                if (args.examTypes && Array.isArray(args.examTypes)) {
+                  newProfile.examTypes = normalizeExamTypes(args.examTypes)
+                }
+                if (args.region && REGIONS.includes(args.region)) {
+                  newProfile.region = args.region
+                }
+                saveProfile(worktree, newProfile)
+                return `已覆盖用户 "${args.username}" 的旧档案。新档案已创建，积分重置为 0。`
               }
               default:
                 return `Error: 未知操作 ${args.action}`
