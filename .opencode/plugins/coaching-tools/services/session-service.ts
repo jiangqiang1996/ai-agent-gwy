@@ -10,7 +10,6 @@ export async function switchSessionProfile(worktree: string, input: {
   await saveSessionPointer(worktree, {
     sessionId: input.sessionId,
     profileId: input.profileId,
-    attemptId: null,
     epoch,
     updatedAt: new Date().toISOString(),
   })

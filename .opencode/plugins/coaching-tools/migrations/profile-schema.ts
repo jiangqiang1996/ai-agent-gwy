@@ -36,18 +36,6 @@ function parseIdentity(value: unknown): UserIdentity | null | "blocked" {
   return "blocked"
 }
 
-function hasValidStreak(value: unknown): value is { current: number; best: number } {
-  return isRecord(value) && typeof value.current === "number" && typeof value.best === "number"
-}
-
-function hasValidMastery(value: unknown): value is UserProfile["mastery"] {
-  return isRecord(value)
-}
-
-function hasValidHistory(value: unknown): value is UserProfile["history"] {
-  return Array.isArray(value)
-}
-
 export function migrateProfileRecord(raw: unknown): ProfileMigrationResult {
   if (!isRecord(raw)) {
     return {
@@ -72,28 +60,6 @@ export function migrateProfileRecord(raw: unknown): ProfileMigrationResult {
       classification: "quarantine",
       issues: [{ code: "missing-core-fields", message: "用户档案缺少 createdAt 等核心字段" }],
       profile: null,
-    }
-  }
-
-  if (!hasValidMastery(raw.mastery) || !hasValidHistory(raw.history)) {
-    return {
-      classification: "quarantine",
-      issues: [{ code: "invalid-core-shape", message: "用户档案的 mastery/history 结构无效" }],
-      profile: null,
-    }
-  }
-
-  const hasLegacyScoreFields = raw.points !== undefined || raw.level !== undefined || raw.streak !== undefined
-  const legacyPoints = typeof raw.points === "number" ? raw.points : undefined
-  const legacyLevel = typeof raw.level === "number" ? raw.level : undefined
-  const legacyStreak = hasValidStreak(raw.streak) ? raw.streak : undefined
-  if (hasLegacyScoreFields) {
-    if (legacyPoints === undefined || legacyLevel === undefined || legacyStreak === undefined) {
-      return {
-        classification: "blocked",
-        issues: [{ code: "invalid-legacy-score", message: "legacy score 字段不完整或结构不合法，需人工修复" }],
-        profile: null,
-      }
     }
   }
 
@@ -171,15 +137,6 @@ export function migrateProfileRecord(raw: unknown): ProfileMigrationResult {
       name: raw.name,
       createdAt: raw.createdAt,
       identity,
-      ...(hasLegacyScoreFields ? {
-        legacyScore: {
-          points: legacyPoints!,
-          level: legacyLevel!,
-          streak: legacyStreak!,
-        },
-      } : {}),
-      mastery: raw.mastery,
-      history: raw.history,
       examTypes: normalizedExamTypes,
       region,
       studyPlan,

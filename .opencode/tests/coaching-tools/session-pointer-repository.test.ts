@@ -25,14 +25,12 @@ describe("session pointer repository", () => {
     await saveSessionPointer(worktree, {
       sessionId: "session-1",
       profileId: "profile-1",
-      attemptId: "attempt-1",
       epoch: 3,
       updatedAt: "2026-01-02T03:04:05.000Z",
     })
 
     expect(loadSessionPointer(worktree, "session-1")).toMatchObject({
       profileId: "profile-1",
-      attemptId: "attempt-1",
       epoch: 3,
     })
   })

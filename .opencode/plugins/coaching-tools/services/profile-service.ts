@@ -38,8 +38,6 @@ function buildFreshProfile(input: ProfileServiceInput): UserProfile {
     name: input.username,
     createdAt: new Date().toISOString(),
     identity: input.identity ?? null,
-    mastery: {},
-    history: [],
     examTypes: normalizeExamTypes(input.examTypes ?? []),
     region: normalizeRegion(input.region),
     studyPlan: null,
@@ -115,7 +113,8 @@ export async function overwriteProfile(worktree: string, input: ProfileServiceIn
   if (current.status === "not_found") return { status: "not_found" }
   if (current.status === "blocked") return { status: "blocked", reason: current.reason }
 
-  await deleteProfileRecord(worktree, current.profile!.id)
+  if (!current.profile) return { status: "not_found" }
+  await deleteProfileRecord(worktree, current.profile.id)
 
   const profile = buildFreshProfile(input)
   await saveProfileRecord(worktree, profile)
@@ -140,7 +139,8 @@ export async function saveStudyPlanForProfile(worktree: string, username: string
   if (current.status === "not_found") return { status: "not_found" }
   if (current.status === "blocked") return { status: "blocked", reason: current.reason }
 
-  const profile = current.profile!
+  if (!current.profile) return { status: "not_found" }
+  const profile = current.profile
   const studyPlan = {
     content: planContent.substring(0, 5000),
     createdAt: new Date().toISOString(),
@@ -161,7 +161,8 @@ export async function updateProfileDetails(worktree: string, input: ProfileUpdat
   if (current.status === "not_found") return { status: "not_found" }
   if (current.status === "blocked") return { status: "blocked", reason: current.reason }
 
-  const profile = current.profile!
+  if (!current.profile) return { status: "not_found" }
+  const profile = current.profile
   const changes: string[] = []
   const nextName = input.newName?.trim()
 
@@ -177,7 +178,6 @@ export async function updateProfileDetails(worktree: string, input: ProfileUpdat
     profile.name = nextName
     changes.push(`名字→${profile.name}`)
 
-    await saveProfileRecord(worktree, profile)
     await saveNameClaim(worktree, {
       displayName: previousName,
       state: "released",

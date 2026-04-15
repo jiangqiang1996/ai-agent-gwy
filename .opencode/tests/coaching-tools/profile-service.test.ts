@@ -98,8 +98,6 @@ describe("profile service", () => {
         level: 3,
         streak: { current: 4, best: 8 },
       },
-      mastery: {},
-      history: [],
       examTypes: ["guokao"],
       region: "重庆",
       studyPlan: null,

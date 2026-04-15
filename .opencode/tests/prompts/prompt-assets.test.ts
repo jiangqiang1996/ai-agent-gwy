@@ -43,6 +43,26 @@ describe("prompt assets", () => {
     expect(content).toContain(".opencode/rules/summary-first-workflow.md")
     expect(content).toContain("截图题目讲解遵循")
     expect(content).toContain("身份=[用户identity]")
+    expect(content).toContain("QuestionArtifact")
+  })
+
+  it("ensures specialist teacher prompts follow summary-first framing without 出题原则 sections", async () => {
+    const teacherFiles = [
+      { file: "agents/xingce-yanyu-teacher.md", name: "言语" },
+      { file: "agents/xingce-shuliang-teacher.md", name: "数量" },
+      { file: "agents/xingce-panduan-teacher.md", name: "判断" },
+      { file: "agents/xingce-ziliao-teacher.md", name: "资料" },
+      { file: "agents/xingce-changshi-teacher.md", name: "常识" },
+      { file: "agents/xingce-zhengzhi-teacher.md", name: "政治" },
+      { file: "agents/xingce-zong-teacher.md", name: "行测总" },
+    ]
+
+    for (const { file, name } of teacherFiles) {
+      const content = await readPromptAsset(file)
+      expect(content).not.toContain("## 出题原则")
+      expect(content).toContain("总结优先")
+      expect(content).toContain("截图响应")
+    }
   })
 
   it("keeps the political theory prompt typo fixed", async () => {

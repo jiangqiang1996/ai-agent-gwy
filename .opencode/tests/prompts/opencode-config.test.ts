@@ -18,6 +18,7 @@ describe("opencode config compatibility", () => {
     expect(config.agent?.orchestrator?.tools?.["question-generator"]).toBe(true)
     expect(config.agent?.orchestrator?.tools?.timer).toBeUndefined()
     expect(config.agent?.orchestrator?.tools?.points).toBeUndefined()
+    expect(config.agent?.orchestrator?.tools?.["attempt-repository"]).toBeUndefined()
     expect(config.agent?.["guokao-working-champion"]).toBeDefined()
     expect(config.agent?.["guokao-campus-champion"]).toBeDefined()
     expect(config.agent?.["shengkao-working-champion"]).toBeDefined()
