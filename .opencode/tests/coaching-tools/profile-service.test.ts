@@ -93,11 +93,6 @@ describe("profile service", () => {
       id: "profile-1",
       name: "existing-user",
       createdAt: "2026-01-02T03:04:05.000Z",
-      legacyScore: {
-        points: 99,
-        level: 3,
-        streak: { current: 4, best: 8 },
-      },
       examTypes: ["guokao"],
       region: "重庆",
       studyPlan: null,
