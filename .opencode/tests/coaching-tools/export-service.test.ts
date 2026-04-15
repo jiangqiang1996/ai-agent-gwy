@@ -102,4 +102,86 @@ describe("export service", () => {
       content: "content",
     })).rejects.toThrow("系统保留名称")
   })
+
+  it("renders markdown headings as HTML with IDs", async () => {
+    const worktree = await withWorktree()
+
+    const result = await exportDocument(worktree, {
+      format: "html",
+      title: "标题测试",
+      content: "## 数量关系\n\n### 基础题型",
+    })
+
+    const html = await readFile(result.absolutePath, "utf8")
+    expect(html).toContain('<h2 id="数量关系">')
+    expect(html).toContain('<h3 id="基础题型">')
+  })
+
+  it("generates TOC from headings", async () => {
+    const worktree = await withWorktree()
+
+    const result = await exportDocument(worktree, {
+      format: "html",
+      title: "TOC测试",
+      content: "## 第一节\n\n### 小节A\n\n## 第二节",
+    })
+
+    const html = await readFile(result.absolutePath, "utf8")
+    expect(html).toContain('<nav class="toc">')
+    expect(html).toContain("第一节")
+    expect(html).toContain("第二节")
+  })
+
+  it("renders mermaid code block as mermaid container", async () => {
+    const worktree = await withWorktree()
+
+    const result = await exportDocument(worktree, {
+      format: "html",
+      title: "Mermaid测试",
+      content: "```mermaid\ngraph TD\n    A-->B\n```",
+    })
+
+    const html = await readFile(result.absolutePath, "utf8")
+    expect(html).toContain('<pre class="mermaid">')
+  })
+
+  it("renders chart code block as canvas element", async () => {
+    const worktree = await withWorktree()
+
+    const result = await exportDocument(worktree, {
+      format: "html",
+      title: "Chart测试",
+      content: '```chart\n{"type":"bar","data":{"labels":["A"],"datasets":[{"label":"X","data":[1]}]}}\n```',
+    })
+
+    const html = await readFile(result.absolutePath, "utf8")
+    expect(html).toContain('<canvas id="chart-0"')
+  })
+
+  it("preserves KaTeX formula in HTML output", async () => {
+    const worktree = await withWorktree()
+
+    const result = await exportDocument(worktree, {
+      format: "html",
+      title: "公式测试",
+      content: "公式 $E=mc^2$ 测试",
+    })
+
+    const html = await readFile(result.absolutePath, "utf8")
+    expect(html).toContain("katex")
+  })
+
+  it("preserves HTML passthrough elements (details)", async () => {
+    const worktree = await withWorktree()
+
+    const result = await exportDocument(worktree, {
+      format: "html",
+      title: "HTML透传",
+      content: "<details>\n<summary>题目</summary>\n\n答案\n\n</details>",
+    })
+
+    const html = await readFile(result.absolutePath, "utf8")
+    expect(html).toContain("<details>")
+    expect(html).toContain("<summary>")
+  })
 })

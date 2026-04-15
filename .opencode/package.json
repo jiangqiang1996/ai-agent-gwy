@@ -6,9 +6,13 @@
   },
   "dependencies": {
     "@opencode-ai/plugin": "1.4.6",
-    "marked": "^15.0.0"
+    "katex": "^0.16.45",
+    "marked": "^15.0.0",
+    "marked-katex-extension": "^5.1.8"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.2",
     "vitest": "^3.2.4"
   }
 }
