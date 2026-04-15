@@ -21,7 +21,6 @@ export interface ProfileUpdateInput {
   identity?: UserIdentity | null
 }
 
-
 function normalizeRegion(region: string | undefined): string | null {
   if (region === undefined || region === "") return null
   if (!REGIONS.includes(region)) {

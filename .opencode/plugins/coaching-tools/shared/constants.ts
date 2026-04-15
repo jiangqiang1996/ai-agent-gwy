@@ -5,7 +5,6 @@ export const USERS_DIR = `${DATA_DIR}/users`
 export const SYSTEM_DIR = `${DATA_DIR}/system`
 export const SESSION_POINTERS_DIR = `${SYSTEM_DIR}/sessions`
 export const IDENTITY_INDEX_PATH = `${SYSTEM_DIR}/identity-index.json`
-export const MIGRATION_MANIFEST_PATH = `${SYSTEM_DIR}/migration-manifest.json`
 
 export const XINGCE_SUBJECTS = [
   "言语理解与表达",

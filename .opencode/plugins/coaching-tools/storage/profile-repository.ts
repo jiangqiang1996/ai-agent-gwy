@@ -83,11 +83,6 @@ export async function findProfilesByName(worktree: string, name: string): Promis
   return results.filter(result => result.profile?.name === name)
 }
 
-export async function loadProfileById(worktree: string, profileId: string): Promise<ProfileRecordResult | null> {
-  const results = await listProfileRecords(worktree)
-  return results.find(result => result.profile?.id === profileId) ?? null
-}
-
 export async function saveProfileRecord(worktree: string, profile: UserProfile): Promise<void> {
   const nextProfile: UserProfile = {
     ...profile,

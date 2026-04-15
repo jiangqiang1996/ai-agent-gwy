@@ -41,7 +41,7 @@ describe("prompt assets", () => {
     expect(content).toContain("共享规则选中的状元代理")
     expect(content).toContain(".opencode/rules/champion-routing.md")
     expect(content).toContain(".opencode/rules/summary-first-workflow.md")
-    expect(content).toContain("截图题目讲解遵循")
+    expect(content).toContain("题目输入与讲解遵循")
     expect(content).toContain("身份=[用户identity]")
     expect(content).toContain("QuestionArtifact")
   })
@@ -61,7 +61,7 @@ describe("prompt assets", () => {
       const content = await readPromptAsset(file)
       expect(content).not.toContain("## 出题原则")
       expect(content).toContain("总结优先")
-      expect(content).toContain("截图响应")
+      expect(content).toContain("题目响应")
     }
   })
 

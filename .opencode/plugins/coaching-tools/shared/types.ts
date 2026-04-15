@@ -34,14 +34,5 @@ export interface SessionPointerRecord {
   updatedAt: string
 }
 
-export interface MigrationManifestRecord {
-  epoch: number
-  createdAt: string
-  backupId: string | null
-  migratedProfiles: string[]
-  quarantinedIdentities: string[]
-  notes: string[]
-}
-
 export const EXAM_TYPES = ["guokao", "shengkao", "shiyedanwei"] as const
 export type ExamType = typeof EXAM_TYPES[number]
