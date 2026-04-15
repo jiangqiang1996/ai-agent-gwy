@@ -30,34 +30,8 @@ export function createQuestionGeneratorTool() {
         let selectedLeaf = args.leafTopic
 
         if (!selectedSubject) {
-          if (profile && Object.keys(profile.mastery).length > 0) {
-            const examSubjects = userExamTypes.length > 0 ? validSubjects : XINGCE_SUBJECTS
-            let worstAcc = 100
-            const candidates: string[] = []
-            for (const subject of examSubjects) {
-              const mastery = profile.mastery[subject]
-              if (mastery && mastery.total >= 5) {
-                const accuracy = (mastery.correct / mastery.total) * 100
-                if (accuracy < worstAcc) {
-                  worstAcc = accuracy
-                  candidates.length = 0
-                  candidates.push(subject)
-                } else if (accuracy === worstAcc) {
-                  candidates.push(subject)
-                }
-              } else if (!mastery) {
-                candidates.push(subject)
-              }
-            }
-            if (candidates.length > 0) {
-              selectedSubject = candidates[Math.floor(Math.random() * candidates.length)]
-            } else {
-              selectedSubject = examSubjects[Math.floor(Math.random() * examSubjects.length)]
-            }
-          } else {
-            const pool = validSubjects.length > 0 ? validSubjects : XINGCE_SUBJECTS
-            selectedSubject = pool[Math.floor(Math.random() * pool.length)]
-          }
+          const pool = validSubjects.length > 0 ? validSubjects : XINGCE_SUBJECTS
+          selectedSubject = pool[Math.floor(Math.random() * pool.length)]
         }
 
         if (!validSubjects.includes(selectedSubject) && !XINGCE_SUBJECTS.includes(selectedSubject)) {

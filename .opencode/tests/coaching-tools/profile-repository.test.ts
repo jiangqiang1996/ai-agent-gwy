@@ -65,8 +65,6 @@ describe("profile repository", () => {
       id: "profile-123",
       name: "fresh-user",
       createdAt: "2026-01-02T03:04:05.000Z",
-      mastery: {},
-      history: [],
       examTypes: [],
       region: null,
       studyPlan: null,

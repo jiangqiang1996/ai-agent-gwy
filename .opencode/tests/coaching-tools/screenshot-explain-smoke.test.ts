@@ -20,4 +20,12 @@ describe("screenshot explain smoke", () => {
     expect(artifact).toContain("completeness")
     expect(skill).toContain("只有用户明确要求导出时才写文件")
   })
+
+  it("requires QuestionArtifact as a gate in the orchestrator screenshot route", async () => {
+    const orchestrator = await readProjectFile("agents/orchestrator.md")
+
+    expect(orchestrator).toContain("QuestionArtifact")
+    expect(orchestrator).toContain("截图工作流")
+    expect(orchestrator).toMatch(/截图.*QuestionArtifact.*老师|QuestionArtifact.*截图/)
+  })
 })

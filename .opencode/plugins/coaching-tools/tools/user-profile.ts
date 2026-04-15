@@ -4,7 +4,6 @@ import { REGIONS } from "../shared/constants.js"
 import { formatExamTypes, normalizeExamTypes } from "../shared/formatters.js"
 import { checkNameAvailability, createProfile, loadProfile, overwriteProfile, saveStudyPlanForProfile, updateProfileDetails } from "../services/profile-service.js"
 import { switchSessionProfile } from "../services/session-service.js"
-import { loadProfileByName } from "../runtime/profile-helpers.js"
 
 export function createUserProfileTool() {
   return tool({
@@ -26,7 +25,7 @@ export function createUserProfileTool() {
             const availability = await checkNameAvailability(worktree, args.username)
             if (availability.status === "existing" && availability.profile) {
               const existing = availability.profile
-              return `名字 "${args.username}" 已存在（${existing.history.length}条学习记录，考试类型: ${formatExamTypes(existing.examTypes)}，地区: ${existing.region || "未设置"}）。请让用户选择：\n1. 这是我的账号 → 确认后调用 loadOrCreate 加载已有档案\n2. 换一个新名字 → 用户重新报名字后再 checkName\n3. 覆盖原有账号 → 提醒用户这是不可恢复的操作，确认后调用 overwrite 覆盖`
+              return `名字 "${args.username}" 已存在（考试类型: ${formatExamTypes(existing.examTypes)}，地区: ${existing.region || "未设置"}）。请让用户选择：\n1. 这是我的账号 → 确认后调用 loadOrCreate 加载已有档案\n2. 换一个新名字 → 用户重新报名字后再 checkName\n3. 覆盖原有账号 → 提醒用户这是不可恢复的操作，确认后调用 overwrite 覆盖`
             }
             if (availability.status === "blocked") {
               return `名字 "${args.username}" 当前处于修复/冲突状态，暂时不能直接创建或加载。请先让用户确认是否需要修复旧档案。`
@@ -64,28 +63,17 @@ export function createUserProfileTool() {
               sessionId: context.sessionID,
               profileId: profile.id,
             })
-            const totalQ = profile.history.length
-            const totalCorrect = profile.history.filter(entry => entry.correct).length
-            const accuracy = totalQ > 0 ? Math.round((totalCorrect / totalQ) * 100) : 0
-            return `欢迎回来，${profile.name}！身份: ${profile.identity === "working" ? "在职" : profile.identity === "campus" ? "应届生" : "未设置"}, 已记录: ${totalQ}条学习记录, 正确率: ${accuracy}%, 考试类型: ${formatExamTypes(profile.examTypes)}, 地区: ${profile.region || "未设置"}`
+            return `欢迎回来，${profile.name}！身份: ${profile.identity === "working" ? "在职" : profile.identity === "campus" ? "应届生" : "未设置"}, 考试类型: ${formatExamTypes(profile.examTypes)}, 地区: ${profile.region || "未设置"}`
           }
           case "getStats": {
-            const profile = loadProfileByName(worktree, args.username)
-            if (!profile) return `Error: 用户 ${args.username} 不存在`
+            const loaded = await loadProfile(worktree, args.username)
+            if (loaded.status === "not_found") return `Error: 用户 ${args.username} 不存在`
+            if (loaded.status === "blocked") return `Error: 用户 ${args.username} 当前处于冲突/修复状态`
+            const profile = loaded.profile!
             const lines: string[] = []
             lines.push(`=== ${profile.name} 的学习数据 ===`)
             lines.push(`身份: ${profile.identity === "working" ? "在职" : profile.identity === "campus" ? "应届生" : "未设置"}`)
             lines.push("")
-            for (const [subject, data] of Object.entries(profile.mastery)) {
-              const accuracy = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0
-              const sampleNote = data.total < 5 ? " [样本不足]" : ""
-              lines.push(`【${subject}】${data.total}题, 正确率 ${accuracy}%${sampleNote}, 平均 ${data.avgTimeSeconds}s`)
-              for (const [leafTopic, leafData] of Object.entries(data.leafTopics || {})) {
-                const leafAccuracy = leafData.total > 0 ? Math.round((leafData.correct / leafData.total) * 100) : 0
-                const leafNote = leafData.total < 5 ? " [样本不足]" : ""
-                lines.push(`  - ${leafTopic}: ${leafData.total}题, ${leafAccuracy}%${leafNote}, 平均 ${leafData.avgTimeSeconds}s`)
-              }
-            }
             lines.push(`考试类型: ${formatExamTypes(profile.examTypes)} | 地区: ${profile.region || "未设置"}`)
             if (profile.studyPlan) {
               lines.push(`学习计划: 已保存 (${new Date(profile.studyPlan.createdAt).toLocaleDateString("zh-CN")})`)

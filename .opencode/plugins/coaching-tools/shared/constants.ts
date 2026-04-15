@@ -2,15 +2,10 @@ import type { ExamType } from "./types.js"
 
 export const DATA_DIR = "data"
 export const USERS_DIR = `${DATA_DIR}/users`
-export const ATTEMPTS_DIR = `${DATA_DIR}/attempts`
 export const SYSTEM_DIR = `${DATA_DIR}/system`
 export const SESSION_POINTERS_DIR = `${SYSTEM_DIR}/sessions`
 export const IDENTITY_INDEX_PATH = `${SYSTEM_DIR}/identity-index.json`
 export const MIGRATION_MANIFEST_PATH = `${SYSTEM_DIR}/migration-manifest.json`
-
-export const LEVEL_THRESHOLDS = [0, 50, 150, 300, 500, 800, 1200, 1700, 2300, 3000]
-export const POINTS_CORRECT = 10
-export const POINTS_WRONG = 3
 
 export const XINGCE_SUBJECTS = [
   "言语理解与表达",

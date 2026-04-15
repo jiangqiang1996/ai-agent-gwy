@@ -11,8 +11,6 @@ describe("profile schema cleanup", () => {
       points: 42,
       level: 3,
       streak: { current: 2, best: 4 },
-      mastery: {},
-      history: [],
       examTypes: [],
       region: null,
       studyPlan: null,

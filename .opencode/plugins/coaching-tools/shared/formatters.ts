@@ -2,19 +2,11 @@ import {
   EXAM_CONFIGS,
   EXAM_LABELS,
   EXAM_TYPE_MAP,
-  LEVEL_THRESHOLDS,
   REGION_SPECIAL_SUBJECTS,
   XINGCE_LEAF_TOPICS,
   XINGCE_SUBJECTS,
 } from "./constants.js"
 import { EXAM_TYPES, type ExamType } from "./types.js"
-
-export function calcLevel(points: number): number {
-  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (points >= LEVEL_THRESHOLDS[i]) return i + 1
-  }
-  return 1
-}
 
 export function normalizeExamTypes(raw: string[]): string[] {
   return raw

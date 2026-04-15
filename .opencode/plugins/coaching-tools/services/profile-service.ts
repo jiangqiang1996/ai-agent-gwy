@@ -38,8 +38,6 @@ function buildFreshProfile(input: ProfileServiceInput): UserProfile {
     name: input.username,
     createdAt: new Date().toISOString(),
     identity: input.identity ?? null,
-    mastery: {},
-    history: [],
     examTypes: normalizeExamTypes(input.examTypes ?? []),
     region: normalizeRegion(input.region),
     studyPlan: null,

@@ -174,6 +174,31 @@ describe("tool contracts", () => {
     expect(loaded).toContain("欢迎回来")
   })
 
+  it("returns getStats through the safe profile-service path", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const userProfileTool = plugin.tool?.["user-profile"]
+
+    await userProfileTool!.execute({
+      action: "loadOrCreate",
+      username: "stats-user",
+      examTypes: ["shengkao"],
+      region: "四川",
+      identity: "working",
+    }, { worktree, sessionID: "session-stats" } as never)
+
+    const stats = await userProfileTool!.execute({
+      action: "getStats",
+      username: "stats-user",
+    }, { worktree, sessionID: "session-stats" } as never)
+
+    expect(stats).toContain("在职")
+    expect(stats).toContain("省考")
+    expect(stats).toContain("四川")
+    expect(stats).not.toContain("积分")
+    expect(stats).not.toContain("等级")
+  })
+
   it("directs overwrite confirmations to the overwrite action", async () => {
     const worktree = await withWorktree()
     const plugin = await CoachingPlugin({} as never)
