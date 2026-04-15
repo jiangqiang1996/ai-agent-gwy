@@ -1,6 +1,8 @@
 import { mkdir, stat, writeFile } from "node:fs/promises"
 import { join, relative } from "node:path"
 
+import { marked } from "marked"
+
 export type ExportFormat = "markdown" | "html"
 
 const WINDOWS_RESERVED_NAMES = new Set([
@@ -44,9 +46,9 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#39;")
 }
 
-function renderHtmlDocument(title: string, content: string): string {
+function renderHtmlDocument(title: string, markdownContent: string): string {
   const escapedTitle = escapeHtml(title)
-  const escapedContent = escapeHtml(content)
+  const htmlBody = marked.parse(markdownContent)
 
   return `<!doctype html>
 <html lang="zh-CN">
@@ -56,13 +58,26 @@ function renderHtmlDocument(title: string, content: string): string {
   <title>${escapedTitle}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 40px auto; max-width: 860px; padding: 0 24px; color: #111827; line-height: 1.7; }
-    h1 { font-size: 28px; margin-bottom: 24px; }
-    article { white-space: pre-wrap; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; }
+    h1 { font-size: 28px; margin-bottom: 24px; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; }
+    h2 { font-size: 22px; margin-top: 32px; color: #1f2937; }
+    h3 { font-size: 18px; margin-top: 24px; color: #374151; }
+    article { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 32px; }
+    table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+    th, td { border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; }
+    th { background: #f3f4f6; font-weight: 600; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 14px; }
+    pre { background: #f3f4f6; padding: 16px; border-radius: 8px; overflow-x: auto; }
+    pre code { background: none; padding: 0; }
+    blockquote { border-left: 4px solid #6366f1; margin: 16px 0; padding: 8px 16px; color: #4b5563; background: #f9fafb; border-radius: 0 8px 8px 0; }
+    ul, ol { padding-left: 24px; }
+    li { margin: 4px 0; }
+    a { color: #4f46e5; }
+    hr { border: none; border-top: 1px solid #e5e7eb; margin: 24px 0; }
   </style>
 </head>
 <body>
   <h1>${escapedTitle}</h1>
-  <article>${escapedContent}</article>
+  <article>${htmlBody}</article>
 </body>
 </html>`
 }

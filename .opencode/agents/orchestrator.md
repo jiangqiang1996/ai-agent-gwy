@@ -19,7 +19,7 @@
 | 知识点总结 / 模块梳理 | `xingce-zong-teacher` + 对应模块老师 + 共享规则选中的状元代理(可选) |
 | 题目讲解（截图/文字/文件） | 题目输入工作流 → QuestionArtifact → 确认门控 → 对应模块老师 + 共享规则选中的状元代理(可选) |
 | 经典例题 / 代表性示例 | 对应模块老师 |
-| 导出当前内容 | `export-document` 工具 / `export-markdown` skill / `export-html` skill |
+| 导出当前内容 | 直接调用 `export-document` 工具（不加载 skill） |
 | 查看已有档案摘要 | `user-profile` 工具 (`getStats`) |
 | 制定学习计划 | `xingce-zong-teacher` + 对应模块老师 + `user-profile` (`saveStudyPlan`) |
 | 更新资料 | `user-profile` 工具 (`updateProfile`) |

@@ -5,7 +5,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "1.4.6"
+    "@opencode-ai/plugin": "1.4.6",
+    "marked": "^15.0.0"
   },
   "devDependencies": {
     "vitest": "^3.2.4"

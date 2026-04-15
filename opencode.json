@@ -19,6 +19,9 @@
     },
     "task": {
       "*": "allow"
+    },
+    "tool": {
+      "*": "allow"
     }
   },
   "agent": {
