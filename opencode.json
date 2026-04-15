@@ -110,6 +110,26 @@
       },
       "color": "#5f27cd"
     },
+    "xingce-kexue-teacher": {
+      "description": "科学推理老师：物理推理、化学推理、生物推理（广东科学推理专项）",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#26de81"
+    },
+    "shenlun-zong-teacher": {
+      "description": "申论总老师：归纳概括、综合分析、提出对策、贯彻执行、申发论述",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true
+      },
+      "color": "#fc5c65"
+    },
     "guokao-working-champion": {
       "description": "在职国考状元：在职备考视角、高效率国考经验",
       "mode": "subagent",
@@ -128,7 +148,7 @@
         "grep": true,
         "glob": true
       },
-      "color": "#95e1d3"
+      "color": "#7ec8e3"
     },
     "shengkao-working-champion": {
       "description": "在职省考状元：在职备考视角、地区语境下的高效省考经验",

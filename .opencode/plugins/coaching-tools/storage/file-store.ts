@@ -12,10 +12,19 @@ export function atomicWriteFile(filePath: string, data: string): void {
   mkdirSync(directory, { recursive: true })
   const temporaryFile = `${filePath}.tmp`
   writeFileSync(temporaryFile, data, "utf8")
-  if (existsSync(filePath)) {
-    unlinkSync(filePath)
+  try {
+    if (existsSync(filePath)) {
+      unlinkSync(filePath)
+    }
+    renameSync(temporaryFile, filePath)
+  } catch (renameError) {
+    if (existsSync(temporaryFile) && !existsSync(filePath)) {
+      try { renameSync(temporaryFile, filePath) } catch { /* best-effort recovery */ }
+    }
+    if (!existsSync(filePath)) {
+      throw renameError
+    }
   }
-  renameSync(temporaryFile, filePath)
 }
 
 export function fileExists(filePath: string): boolean {

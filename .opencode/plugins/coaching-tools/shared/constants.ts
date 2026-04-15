@@ -57,13 +57,14 @@ export const EXAM_CONFIGS: Record<ExamType, {
     difficulty: "中高",
   },
   shengkao: {
-    subjects: ["言语理解与表达", "数量关系", "判断推理", "资料分析", "常识判断"],
+    subjects: ["言语理解与表达", "数量关系", "判断推理", "资料分析", "常识判断", "政治理论"],
     weights: {
-      "言语理解与表达": 0.22,
-      "数量关系": 0.15,
-      "判断推理": 0.22,
-      "资料分析": 0.18,
-      "常识判断": 0.23,
+      "言语理解与表达": 0.2,
+      "数量关系": 0.13,
+      "判断推理": 0.2,
+      "资料分析": 0.17,
+      "常识判断": 0.17,
+      "政治理论": 0.13,
     },
     difficulty: "中",
   },
@@ -82,6 +83,22 @@ export const EXAM_CONFIGS: Record<ExamType, {
 
 export const REGION_SPECIAL_SUBJECTS: Record<string, Array<{ subject: string; leafTopics: string[] }>> = {
   "广东": [{ subject: "科学推理", leafTopics: ["物理推理", "化学推理", "生物推理"] }],
+}
+
+export const SHENLUN_SUBJECTS = [
+  "归纳概括",
+  "综合分析",
+  "提出对策",
+  "贯彻执行",
+  "申发论述",
+]
+
+export const SHENLUN_LEAF_TOPICS: Record<string, string[]> = {
+  "归纳概括": ["概括问题", "概括原因", "概括影响", "概括经验"],
+  "综合分析": ["词句理解", "观点评析", "比较分析", "启示分析"],
+  "提出对策": ["问题诊断", "对策设计", "可行性评估"],
+  "贯彻执行": ["倡议书", "讲话稿", "工作方案", "短评", "调研报告"],
+  "申发论述": ["立意确定", "分论点设计", "论证方法", "素材积累"],
 }
 
 export const REGIONS = [

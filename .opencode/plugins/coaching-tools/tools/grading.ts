@@ -1,5 +1,17 @@
 import { tool } from "@opencode-ai/plugin"
 
+function normalizeAnswer(raw: string): string {
+  return raw
+    .trim()
+    .replace(/[，、；：。！？""''（）【】《》\s]/g, ",")
+    .replace(/[^A-Za-z,]/g, "")
+    .split(",")
+    .filter(Boolean)
+    .map(letter => letter.toUpperCase())
+    .sort()
+    .join("")
+}
+
 export function createGradingTool() {
   return tool({
     description: "判题工具。对比用户答案和正确答案，返回判题结果。支持客观题(选择题)和主观题(分级评分)。",
@@ -11,8 +23,8 @@ export function createGradingTool() {
     async execute(args) {
       try {
         if (args.questionType === "objective") {
-          const correct = args.userAnswer.trim().toUpperCase() === args.correctAnswer.trim().toUpperCase()
-          return correct ? "correct" : `wrong|${args.correctAnswer.trim().toUpperCase()}`
+          const correct = normalizeAnswer(args.userAnswer) === normalizeAnswer(args.correctAnswer)
+          return correct ? "correct" : `wrong|${normalizeAnswer(args.correctAnswer)}`
         }
         return "subjective|需要老师评判"
       } catch (error) {

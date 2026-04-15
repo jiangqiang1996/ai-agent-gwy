@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 
 describe("opencode config compatibility", () => {
-  it("keeps shared rules loaded and registers the new champion skeletons", async () => {
+  it("keeps shared rules loaded and registers the new agents", async () => {
     const configPath = fileURLToPath(new URL("../../../opencode.json", import.meta.url))
     const config = JSON.parse(await readFile(configPath, "utf8")) as {
       instructions?: string[]
@@ -23,6 +23,8 @@ describe("opencode config compatibility", () => {
     expect(config.agent?.["guokao-campus-champion"]).toBeDefined()
     expect(config.agent?.["shengkao-working-champion"]).toBeDefined()
     expect(config.agent?.["shengkao-campus-champion"]).toBeDefined()
+    expect(config.agent?.["xingce-kexue-teacher"]).toBeDefined()
+    expect(config.agent?.["shenlun-zong-teacher"]).toBeDefined()
     expect(config.agent?.["guokao-champion"]).toBeUndefined()
     expect(config.agent?.["chongqing-champion"]).toBeUndefined()
   })

@@ -35,15 +35,18 @@ function sanitizeTitle(title: string | undefined): string {
   return sanitized
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
 function renderHtmlDocument(title: string, content: string): string {
-  const escapedTitle = title
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-  const escapedContent = content
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
+  const escapedTitle = escapeHtml(title)
+  const escapedContent = escapeHtml(content)
 
   return `<!doctype html>
 <html lang="zh-CN">

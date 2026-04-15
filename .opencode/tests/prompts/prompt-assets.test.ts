@@ -44,6 +44,23 @@ describe("prompt assets", () => {
     expect(content).toContain("题目输入与讲解遵循")
     expect(content).toContain("身份=[用户identity]")
     expect(content).toContain("QuestionArtifact")
+    expect(content).toContain("申论题型指导/材料分析/大作文讲解")
+  })
+
+  it("keeps the profile creation flow from forcing an immediate follow-up update", async () => {
+    const content = await readPromptAsset("agents/orchestrator.md")
+
+    expect(content).toContain("先补齐可选资料再调用 `loadOrCreate`")
+    expect(content).toContain("允许直接调用 `loadOrCreate` 创建最小档案")
+  })
+
+  it("does not promise unsupported doc/docx parsing in the shared question flow", async () => {
+    const workflow = await readPromptAsset("rules/question-input-workflow.md")
+    const skill = await readPromptAsset("skills/explain-question/SKILL.md")
+
+    expect(workflow).toContain("优先支持 `.txt`、`.md`、`.pdf` 与图片格式")
+    expect(workflow).toContain("不要假设 `read` 能稳定解析")
+    expect(skill).toContain("若是 `.doc` / `.docx`，先请用户转成更稳定的格式")
   })
 
   it("ensures specialist teacher prompts follow summary-first framing without 出题原则 sections", async () => {
@@ -70,5 +87,10 @@ describe("prompt assets", () => {
 
     expect(content).toContain("中国特色社会主义理论体系")
     expect(content).not.toContain("主度理论体系")
+  })
+
+  it("ships the new specialist teacher prompts", async () => {
+    await expect(readPromptAsset("agents/xingce-kexue-teacher.md")).resolves.toContain("广东省考科学推理题型")
+    await expect(readPromptAsset("agents/shenlun-zong-teacher.md")).resolves.toContain("申论总老师")
   })
 })

@@ -1,0 +1,1 @@
+# 当前仓库即使暂时没有 live command 文件，也保留 commands 目录作为项目级入口位。

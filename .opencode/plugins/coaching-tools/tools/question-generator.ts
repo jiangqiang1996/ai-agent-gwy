@@ -1,6 +1,6 @@
 import { tool } from "@opencode-ai/plugin"
 
-import { XINGCE_SUBJECTS } from "../shared/constants.js"
+import { SHENLUN_SUBJECTS, XINGCE_SUBJECTS } from "../shared/constants.js"
 import { getLeafTopics, getValidSubjects } from "../shared/formatters.js"
 import { loadProfile } from "../services/profile-service.js"
 
@@ -18,7 +18,12 @@ export function createQuestionGeneratorTool() {
       try {
         const worktree = context.worktree
         const profileState = await loadProfile(worktree, args.username)
+        const hasExplicitContext = args.subject !== undefined || args.examTypes !== undefined || args.region !== undefined
         if (profileState.status === "blocked") {
+          if (hasExplicitContext) {
+            const validSubjects = getValidSubjects(args.examTypes ?? [], args.region ?? null)
+            return buildQuestionTemplate(args.subject, args.leafTopic, validSubjects, args.region ?? null)
+          }
           return `Error: 用户 ${args.username} 当前处于冲突/修复状态，无法基于档案生成示例。请先修复档案或显式指定科目/考试类型。`
         }
         const profile = profileState.status === "loaded" ? profileState.profile : undefined
@@ -26,27 +31,42 @@ export function createQuestionGeneratorTool() {
         const userRegion = args.region ?? profile?.region ?? null
         const validSubjects = getValidSubjects(userExamTypes, userRegion)
 
-        let selectedSubject = args.subject
-        let selectedLeaf = args.leafTopic
+        return buildQuestionTemplate(args.subject, args.leafTopic, validSubjects, userRegion)
+      } catch (error) {
+        return `Error: ${error instanceof Error ? error.message : String(error)}`
+      }
+    },
+  })
+}
 
-        if (!selectedSubject) {
-          const pool = validSubjects.length > 0 ? validSubjects : XINGCE_SUBJECTS
-          selectedSubject = pool[Math.floor(Math.random() * pool.length)]
-        }
+function buildQuestionTemplate(
+  subject: string | undefined,
+  leafTopic: string | undefined,
+  validSubjects: string[],
+  region: string | null,
+): string {
+  let selectedSubject = subject
+  let selectedLeaf = leafTopic
 
-        if (!validSubjects.includes(selectedSubject) && !XINGCE_SUBJECTS.includes(selectedSubject)) {
-          return `Error: 未知科目 "${selectedSubject}"。可选: ${validSubjects.join(", ")}`
-        }
+  if (!selectedSubject) {
+    const pool = validSubjects.length > 0 ? validSubjects : [...XINGCE_SUBJECTS, ...SHENLUN_SUBJECTS]
+    selectedSubject = pool[Math.floor(Math.random() * pool.length)]
+  }
 
-        if (!selectedLeaf) {
-          const leaves = getLeafTopics(selectedSubject, userRegion)
-          if (leaves.length > 0) {
-            selectedLeaf = leaves[Math.floor(Math.random() * leaves.length)]
-          }
-        }
+  const allSubjects = [...XINGCE_SUBJECTS, ...SHENLUN_SUBJECTS]
+  if (!validSubjects.includes(selectedSubject) && !allSubjects.includes(selectedSubject)) {
+    return `Error: 未知科目 "${selectedSubject}"。可选: ${[...validSubjects, ...SHENLUN_SUBJECTS].join(", ")}`
+  }
 
-        const questionId = `example-${Date.now()}`
-        const teacherPrompt = `请围绕${selectedSubject}${selectedLeaf ? " (" + selectedLeaf + ")" : ""}给出 1 个代表性经典例题，并完成详细讲解。
+  if (!selectedLeaf) {
+    const leaves = getLeafTopics(selectedSubject, region)
+    if (leaves.length > 0) {
+      selectedLeaf = leaves[Math.floor(Math.random() * leaves.length)]
+    }
+  }
+
+  const questionId = `example-${Date.now()}`
+  const teacherPrompt = `请围绕${selectedSubject}${selectedLeaf ? " (" + selectedLeaf + ")" : ""}给出 1 个代表性经典例题，并完成详细讲解。
 
 要求:
 1. 先用 1-2 句话概括这道例题对应的核心知识点
@@ -60,15 +80,10 @@ export function createQuestionGeneratorTool() {
 答案要点: [关键答案]
 解析: [详细解析]`
 
-        return JSON.stringify({
-          questionId,
-          subject: selectedSubject,
-          leafTopic: selectedLeaf || "",
-          teacherPrompt,
-        })
-      } catch (error) {
-        return `Error: ${error instanceof Error ? error.message : String(error)}`
-      }
-    },
+  return JSON.stringify({
+    questionId,
+    subject: selectedSubject,
+    leafTopic: selectedLeaf || "",
+    teacherPrompt,
   })
 }

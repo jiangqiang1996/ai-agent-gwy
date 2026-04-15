@@ -3,6 +3,7 @@ import {
   EXAM_LABELS,
   EXAM_TYPE_MAP,
   REGION_SPECIAL_SUBJECTS,
+  SHENLUN_LEAF_TOPICS,
   XINGCE_LEAF_TOPICS,
   XINGCE_SUBJECTS,
 } from "./constants.js"
@@ -43,6 +44,7 @@ export function getValidSubjects(examTypes: string[], region: string | null): st
 
 export function getLeafTopics(subject: string, region: string | null): string[] {
   if (XINGCE_LEAF_TOPICS[subject]) return XINGCE_LEAF_TOPICS[subject]
+  if (SHENLUN_LEAF_TOPICS[subject]) return SHENLUN_LEAF_TOPICS[subject]
 
   if (region && REGION_SPECIAL_SUBJECTS[region]) {
     const found = REGION_SPECIAL_SUBJECTS[region].find(subjectConfig => subjectConfig.subject === subject)

@@ -81,6 +81,33 @@ describe("tool contracts", () => {
     expect(result).toContain("冲突/修复状态")
   })
 
+  it("allows explicit question-generator context even when the saved profile is blocked", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const questionGeneratorTool = plugin.tool?.["question-generator"]
+
+    await saveNameClaim(worktree, {
+      displayName: "blocked-explicit-user",
+      state: "blocked",
+      profileId: null,
+      reason: "duplicate identity under repair",
+      updatedAt: "2026-01-02T03:04:05.000Z",
+    })
+
+    const generated = await questionGeneratorTool!.execute({
+      username: "blocked-explicit-user",
+      subject: "判断推理",
+      leafTopic: "逻辑判断",
+      examTypes: ["guokao"],
+    }, { worktree, sessionID: "session-blocked-explicit" } as never)
+
+    const payload = JSON.parse(generated) as { subject: string; leafTopic: string; teacherPrompt: string }
+
+    expect(payload.subject).toBe("判断推理")
+    expect(payload.leafTopic).toBe("逻辑判断")
+    expect(payload.teacherPrompt).toContain("经典例题")
+  })
+
   it("falls back to the saved profile exam context when question-generator args omit it", async () => {
     const worktree = await withWorktree()
     const plugin = await CoachingPlugin({} as never)
@@ -103,6 +130,34 @@ describe("tool contracts", () => {
 
       const payload = JSON.parse(generated) as { subject: string }
       expect(payload.subject).toBe("科学推理")
+    } finally {
+      Math.random = originalRandom
+    }
+  })
+
+  it("does not expose 广东 special subjects without 广东 region context", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const userProfileTool = plugin.tool?.["user-profile"]
+    const questionGeneratorTool = plugin.tool?.["question-generator"]
+    const originalRandom = Math.random
+
+    await userProfileTool!.execute({
+      action: "loadOrCreate",
+      username: "default-subject-user",
+      examTypes: ["shengkao"],
+      region: "四川",
+    }, { worktree, sessionID: "session-default-subject" } as never)
+
+    Math.random = () => 0.99
+    try {
+      const generated = await questionGeneratorTool!.execute({
+        username: "default-subject-user",
+      }, { worktree, sessionID: "session-default-subject" } as never)
+
+      const payload = JSON.parse(generated) as { subject: string }
+      expect(payload.subject).toBe("政治理论")
+      expect(payload.subject).not.toBe("科学推理")
     } finally {
       Math.random = originalRandom
     }
