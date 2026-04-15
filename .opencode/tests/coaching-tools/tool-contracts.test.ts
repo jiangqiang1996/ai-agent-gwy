@@ -211,4 +211,120 @@ describe("tool contracts", () => {
     expect(checkName).toContain("调用 overwrite 覆盖")
     expect(checkName).not.toContain("调用 loadOrCreate 覆盖")
   })
+
+  it("returns error for getStats on non-existent user", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const userProfileTool = plugin.tool?.["user-profile"]
+
+    const stats = await userProfileTool!.execute({
+      action: "getStats",
+      username: "nonexistent-user",
+    }, { worktree, sessionID: "session-stats-err" } as never)
+
+    expect(stats).toContain("Error")
+    expect(stats).toContain("不存在")
+  })
+
+  it("returns error for getStats on blocked user", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const userProfileTool = plugin.tool?.["user-profile"]
+
+    await saveNameClaim(worktree, {
+      displayName: "blocked-stats",
+      state: "blocked",
+      profileId: null,
+      reason: "duplicate identity under repair",
+      updatedAt: "2026-01-02T03:04:05.000Z",
+    })
+
+    const stats = await userProfileTool!.execute({
+      action: "getStats",
+      username: "blocked-stats",
+    }, { worktree, sessionID: "session-stats-blocked" } as never)
+
+    expect(stats).toContain("Error")
+    expect(stats).toContain("冲突/修复状态")
+  })
+
+  it("saves and displays a study plan through getStats", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const userProfileTool = plugin.tool?.["user-profile"]
+
+    await userProfileTool!.execute({
+      action: "loadOrCreate",
+      username: "plan-user",
+    }, { worktree, sessionID: "session-plan" } as never)
+
+    const saved = await userProfileTool!.execute({
+      action: "saveStudyPlan",
+      username: "plan-user",
+      planContent: "每天做10道言语题",
+    }, { worktree, sessionID: "session-plan" } as never)
+
+    expect(saved).toContain("学习计划已保存")
+
+    const stats = await userProfileTool!.execute({
+      action: "getStats",
+      username: "plan-user",
+    }, { worktree, sessionID: "session-plan" } as never)
+
+    expect(stats).toContain("学习计划: 已保存")
+  })
+
+  it("requires planContent for saveStudyPlan", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const userProfileTool = plugin.tool?.["user-profile"]
+
+    await userProfileTool!.execute({
+      action: "loadOrCreate",
+      username: "no-plan-user",
+    }, { worktree, sessionID: "session-noplan" } as never)
+
+    const result = await userProfileTool!.execute({
+      action: "saveStudyPlan",
+      username: "no-plan-user",
+    }, { worktree, sessionID: "session-noplan" } as never)
+
+    expect(result).toContain("Error")
+    expect(result).toContain("planContent")
+  })
+
+  it("overwrites an existing profile and creates a fresh one", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const userProfileTool = plugin.tool?.["user-profile"]
+
+    await userProfileTool!.execute({
+      action: "loadOrCreate",
+      username: "to-overwrite",
+      examTypes: ["guokao"],
+    }, { worktree, sessionID: "session-ow" } as never)
+
+    const overwritten = await userProfileTool!.execute({
+      action: "overwrite",
+      username: "to-overwrite",
+      examTypes: ["shengkao"],
+      region: "广东",
+    }, { worktree, sessionID: "session-ow" } as never)
+
+    expect(overwritten).toContain("已覆盖")
+  })
+
+  it("returns error for overwrite on non-existent user", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const userProfileTool = plugin.tool?.["user-profile"]
+
+    const result = await userProfileTool!.execute({
+      action: "overwrite",
+      username: "ghost-user",
+    }, { worktree, sessionID: "session-ow-ghost" } as never)
+
+    expect(result).toContain("Error")
+    expect(result).toContain("不存在")
+  })
 })

@@ -5,12 +5,6 @@ export interface StudyPlan {
 
 export type UserIdentity = "working" | "campus"
 
-export interface LegacyScoreSnapshot {
-  points: number
-  level: number
-  streak: { current: number; best: number }
-}
-
 export interface UserProfile {
   schemaVersion?: number
   profileVersion?: number
@@ -18,7 +12,6 @@ export interface UserProfile {
   name: string
   createdAt: string
   identity?: UserIdentity | null
-  legacyScore?: LegacyScoreSnapshot
   examTypes: string[]
   region: string | null
   studyPlan: StudyPlan | null

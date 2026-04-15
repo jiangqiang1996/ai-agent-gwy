@@ -38,6 +38,9 @@ describe("profile schema migration", () => {
       id: "legacy-no-score",
       identity: null,
     })
+    expect(result.profile).not.toHaveProperty("mastery")
+    expect(result.profile).not.toHaveProperty("history")
+    expect(result.profile).not.toHaveProperty("legacyScore")
   })
 
   it("blocks semantically unsafe enum values", () => {
@@ -45,9 +48,6 @@ describe("profile schema migration", () => {
       id: "unsafe-user",
       name: "unsafe-user",
       createdAt: "2026-01-02T03:04:05.000Z",
-      points: 0,
-      level: 1,
-      streak: { current: 0, best: 0 },
       examTypes: ["unknown-exam"],
       region: "火星",
       studyPlan: null,
@@ -55,21 +55,6 @@ describe("profile schema migration", () => {
 
     expect(result.classification).toBe("blocked")
     expect(result.issues[0]?.code).toMatch(/unknown-exam-type|invalid-region/)
-  })
-
-  it("blocks incomplete legacy score fields that can no longer be safely normalized", () => {
-    const result = migrateProfileRecord({
-      id: "legacy-partial-score",
-      name: "legacy-partial-score",
-      createdAt: "2026-01-02T03:04:05.000Z",
-      points: 10,
-      examTypes: ["guokao"],
-      region: null,
-      studyPlan: null,
-    })
-
-    expect(result.classification).toBe("blocked")
-    expect(result.issues[0]?.code).toBe("invalid-legacy-score")
   })
 
   it("blocks invalid identity values", () => {

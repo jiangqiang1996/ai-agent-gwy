@@ -7,7 +7,7 @@ import { switchSessionProfile } from "../services/session-service.js"
 
 export function createUserProfileTool() {
   return tool({
-    description: "用户档案管理。操作: checkName(检查名字是否已存在), loadOrCreate(加载或创建用户), getStats(获取学习统计), updateProfile(更新资料), saveStudyPlan(保存学习计划), overwrite(覆盖已有档案,不可恢复)。每次调用必须传 username 参数。重要流程: 用户报名字后必须先调用 checkName 检查名字是否已被使用，如果已存在则提醒用户选择: 1.加载已有档案 2.换个名字 3.覆盖(调用 overwrite)。checkName 返回可用后才能调用 loadOrCreate。",
+    description: "用户档案管理。操作: checkName(检查名字是否已存在), loadOrCreate(加载或创建用户), getStats(获取用户档案信息), updateProfile(更新资料), saveStudyPlan(保存学习计划), overwrite(覆盖已有档案,不可恢复)。每次调用必须传 username 参数。重要流程: 用户报名字后必须先调用 checkName 检查名字是否已被使用，如果已存在则提醒用户选择: 1.加载已有档案 2.换个名字 3.覆盖(调用 overwrite)。checkName 返回可用后才能调用 loadOrCreate。",
     args: {
       action: tool.schema.enum(["checkName", "loadOrCreate", "getStats", "updateProfile", "saveStudyPlan", "overwrite"]).describe("操作类型"),
       username: tool.schema.string().describe("用户名"),
@@ -69,7 +69,8 @@ export function createUserProfileTool() {
             const loaded = await loadProfile(worktree, args.username)
             if (loaded.status === "not_found") return `Error: 用户 ${args.username} 不存在`
             if (loaded.status === "blocked") return `Error: 用户 ${args.username} 当前处于冲突/修复状态`
-            const profile = loaded.profile!
+            if (!loaded.profile) return `Error: 用户 ${args.username} 档案数据异常`
+            const profile = loaded.profile
             const lines: string[] = []
             lines.push(`=== ${profile.name} 的学习数据 ===`)
             lines.push(`身份: ${profile.identity === "working" ? "在职" : profile.identity === "campus" ? "应届生" : "未设置"}`)
@@ -100,13 +101,14 @@ export function createUserProfileTool() {
             if (updated.status === "not_found") return `Error: 用户 ${args.username} 不存在`
             if (updated.status === "conflict" || updated.status === "blocked") return `Error: ${updated.reason}`
             if (!updated.changes || updated.changes.length === 0) return "未提供任何需要更新的字段"
-            if (updated.profile && args.newName && args.newName.trim()) {
+            if (!updated.profile) return `Error: 用户 ${args.username} 档案数据异常`
+            if (args.newName && args.newName.trim()) {
               await switchSessionProfile(worktree, {
                 sessionId: context.sessionID,
                 profileId: updated.profile.id,
               })
             }
-            const profile = updated.profile!
+            const profile = updated.profile
             const changes = updated.changes.map(change => {
               if (change.startsWith("考试类型→")) return `考试类型→${formatExamTypes(profile.examTypes)}`
               if (change === "地区→未设置") return change
