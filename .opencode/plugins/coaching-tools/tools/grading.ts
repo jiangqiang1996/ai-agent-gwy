@@ -23,8 +23,8 @@ export function createGradingTool() {
     async execute(args) {
       try {
         if (args.questionType === "objective") {
-          const correct = normalizeAnswer(args.userAnswer) === normalizeAnswer(args.correctAnswer)
-          return correct ? "correct" : `wrong|${normalizeAnswer(args.correctAnswer)}`
+          const isCorrect = normalizeAnswer(args.userAnswer) === normalizeAnswer(args.correctAnswer)
+          return isCorrect ? "correct" : `wrong|${normalizeAnswer(args.correctAnswer)}`
         }
         return "subjective|需要老师评判"
       } catch (error) {

@@ -1,7 +1,7 @@
 import { tool } from "@opencode-ai/plugin"
 
 import { SHENLUN_SUBJECTS, XINGCE_SUBJECTS } from "../shared/constants.js"
-import { getLeafTopics, getValidSubjects } from "../shared/formatters.js"
+import { getLeafTopics, getAllKnownSubjects, getValidSubjects } from "../shared/formatters.js"
 import { loadProfile } from "../services/profile-service.js"
 
 export function createQuestionGeneratorTool() {
@@ -53,9 +53,13 @@ function buildQuestionTemplate(
     selectedSubject = pool[Math.floor(Math.random() * pool.length)]
   }
 
-  const allSubjects = [...XINGCE_SUBJECTS, ...SHENLUN_SUBJECTS]
-  if (!validSubjects.includes(selectedSubject) && !allSubjects.includes(selectedSubject)) {
-    return `Error: 未知科目 "${selectedSubject}"。可选: ${[...validSubjects, ...SHENLUN_SUBJECTS].join(", ")}`
+  const allSubjects = getAllKnownSubjects()
+  if (!allSubjects.includes(selectedSubject)) {
+    return `Error: 未知科目 "${selectedSubject}"。可选: ${validSubjects.join(", ")}`
+  }
+
+  if (!validSubjects.includes(selectedSubject)) {
+    return `Error: 科目 "${selectedSubject}" 不适用于当前考试类型或地区。可选: ${validSubjects.join(", ")}`
   }
 
   if (!selectedLeaf) {

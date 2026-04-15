@@ -29,7 +29,7 @@ describe("session pointer repository", () => {
       updatedAt: "2026-01-02T03:04:05.000Z",
     })
 
-    expect(loadSessionPointer(worktree, "session-1")).toMatchObject({
+    expect(await loadSessionPointer(worktree, "session-1")).toMatchObject({
       profileId: "profile-1",
       epoch: 3,
     })

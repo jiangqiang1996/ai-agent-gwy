@@ -4,6 +4,7 @@ import {
   EXAM_TYPE_MAP,
   REGION_SPECIAL_SUBJECTS,
   SHENLUN_LEAF_TOPICS,
+  SHENLUN_SUBJECTS,
   XINGCE_LEAF_TOPICS,
   XINGCE_SUBJECTS,
 } from "./constants.js"
@@ -17,6 +18,16 @@ export function normalizeExamTypes(raw: string[]): string[] {
 
 export function formatExamTypes(types: string[]): string {
   return types.length === 0 ? "未设置" : types.map(type => EXAM_LABELS[type] || type).join(",")
+}
+
+export function getAllKnownSubjects(): string[] {
+  const regionSubjects: string[] = []
+  for (const configs of Object.values(REGION_SPECIAL_SUBJECTS)) {
+    for (const c of configs) {
+      if (!regionSubjects.includes(c.subject)) regionSubjects.push(c.subject)
+    }
+  }
+  return [...XINGCE_SUBJECTS, ...SHENLUN_SUBJECTS, ...regionSubjects]
 }
 
 export function getValidSubjects(examTypes: string[], region: string | null): string[] {
