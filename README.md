@@ -10,6 +10,10 @@
 - 题目讲解
 - 显式导出为 Markdown / HTML
 
+## 预览效果
+
+<img alt="sample\preview\img.png" src="sample\preview\img.png"/>
+
 ## 快速开始（安装与使用指南）
 
 本节面向所有用户，即使你完全不懂编程，按照以下步骤也能跑起来。
