@@ -1,0 +1,1105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>图形推理知识图谱</title>
+  <link rel="stylesheet" href="./图形推理知识图谱-2026-04-16-09-57-51Z-assets/runtime/markmap-toolbar/dist/style.css">
+  <style>:root {
+  --primary: #4f46e5;
+  --primary-light: #818cf8;
+  --text: #1f2937;
+  --text-light: #6b7280;
+  --bg: #ffffff;
+  --bg-alt: #f9fafb;
+  --border: #e5e7eb;
+  --border-light: #f3f4f6;
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --sidebar-width: 260px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.8;
+  font-size: 16px;
+  display: flex;
+  min-height: 100vh;
+}
+
+body.no-toc main {
+  margin: 0 auto;
+}
+
+nav.toc {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--bg-alt);
+  border-right: 1px solid var(--border);
+  padding: 24px 16px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+
+nav.toc .toc-title {
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+}
+
+nav.toc ul { list-style: none; }
+
+nav.toc li {
+  margin: 4px 0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+nav.toc li:hover { background: var(--border-light); }
+
+nav.toc li.active {
+  background: #eef2ff;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+nav.toc a {
+  color: var(--text-light);
+  text-decoration: none;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+nav.toc li.active a { color: var(--primary); }
+
+nav.toc .toc-depth-2 { padding-left: 8px; }
+nav.toc .toc-depth-3 { padding-left: 20px; }
+nav.toc .toc-depth-4 { padding-left: 32px; }
+
+main {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  padding: 40px 48px;
+  max-width: 900px;
+}
+
+article {
+  background: var(--bg);
+  max-width: 100%;
+}
+
+h1 { font-size: 28px; margin-bottom: 24px; border-bottom: 3px solid var(--primary); padding-bottom: 12px; color: var(--text); }
+h2 { font-size: 24px; margin-top: 40px; margin-bottom: 16px; color: var(--text); padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 20px; margin-top: 32px; margin-bottom: 12px; color: var(--text); }
+h4 { font-size: 17px; margin-top: 24px; margin-bottom: 8px; color: var(--text-light); }
+
+p { margin-bottom: 16px; }
+
+strong { font-weight: 700; color: var(--text); }
+em { font-style: italic; }
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+ul, ol { padding-left: 24px; margin-bottom: 16px; }
+li { margin: 6px 0; }
+
+table { border-collapse: collapse; width: 100%; margin: 20px 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+th { background: var(--bg-alt); font-weight: 600; color: var(--text); }
+tr:nth-child(even) { background: var(--bg-alt); }
+tr:hover { background: #eef2ff; }
+
+code { background: var(--border-light); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; font-family: var(--font-mono); color: var(--primary); }
+
+pre { background: var(--code-bg); padding: 20px; border-radius: 8px; overflow-x: auto; margin: 16px 0; line-height: 1.6; }
+pre code { background: none; padding: 0; color: var(--code-text); font-size: 14px; }
+
+blockquote { border-left: 4px solid var(--primary); margin: 20px 0; padding: 12px 20px; background: var(--bg-alt); border-radius: 0 8px 8px 0; color: var(--text-light); }
+blockquote p:last-child { margin-bottom: 0; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+img { display: block; max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 12px; margin: 16px auto; border: 1px solid var(--border); background: linear-gradient(180deg, #fff, var(--bg-alt)); box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); }
+
+details { margin: 16px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+summary { padding: 12px 16px; background: var(--bg-alt); cursor: pointer; font-weight: 600; user-select: none; list-style: none; display: flex; align-items: center; gap: 8px; }
+summary::before { content: "▸"; transition: transform 0.2s; font-size: 12px; }
+details[open] summary::before { transform: rotate(90deg); }
+details > *:not(summary) { padding: 0 16px; }
+
+.tabs { margin: 16px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.tab-buttons { display: flex; border-bottom: 1px solid var(--border); background: var(--bg-alt); }
+.tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-size: 14px; color: var(--text-light); font-family: var(--font-sans); transition: all 0.2s; border-bottom: 2px solid transparent; }
+.tab-btn:hover { color: var(--primary); background: var(--border-light); }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; background: var(--bg); }
+.tab-panel { display: none; padding: 16px 20px; }
+.tab-panel.active { display: block; }
+
+.tip { position: relative; display: inline-block; border-bottom: 1px dashed var(--primary); cursor: help; color: var(--primary); }
+.tip-text { visibility: hidden; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 6px 12px; border-radius: 6px; font-size: 13px; white-space: nowrap; z-index: 10; opacity: 0; transition: opacity 0.2s; }
+.tip-text::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--text); }
+.tip:hover .tip-text { visibility: visible; opacity: 1; }
+
+.mermaid-container { margin: 20px 0; text-align: center; }
+.mermaid-container pre.mermaid { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: left; font-size: 14px; }
+
+.chart-container { margin: 20px 0; text-align: center; }
+.chart-container canvas { width: 100% !important; height: auto !important; max-width: 800px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+
+.svg-container { margin: 20px 0; text-align: center; }
+.svg-container svg { max-width: 100%; height: auto; }
+
+.canvas-container { margin: 20px 0; text-align: center; }
+.canvas-container canvas { width: 100%; max-width: 800px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+
+.markmap-container { margin: 24px 0; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: radial-gradient(circle at top, #ffffff, #f8fafc 58%, #eef2ff 100%); box-shadow: 0 18px 40px rgba(79, 70, 229, 0.08); }
+.markmap-host { position: relative; min-height: 360px; }
+.markmap-host > svg { display: block; width: 100%; min-height: 360px; }
+
+pre.chart-error { background: #fef2f2; border: 1px solid #fecaca; color: var(--error); padding: 12px 16px; border-radius: 8px; font-family: var(--font-mono); font-size: 13px; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.badge-info { background: #dbeafe; color: #1d4ed8; }
+.badge-success { background: #dcfce7; color: #15803d; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-error { background: #fee2e2; color: #b91c1c; }
+
+.callout { padding: 16px 20px; border-radius: 8px; margin: 16px 0; border-left: 4px solid var(--primary); }
+.callout-info { background: #eff6ff; border-left-color: #3b82f6; }
+.callout-warning { background: #fffbeb; border-left-color: #f59e0b; }
+.callout-success { background: #f0fdf4; border-left-color: #10b981; }
+.callout-error { background: #fef2f2; border-left-color: #ef4444; }
+
+.katex-display { margin: 16px 0; overflow-x: auto; }
+
+@media (max-width: 1024px) {
+  nav.toc { display: none; }
+  main { margin-left: 0; padding: 24px; }
+}
+
+@media print {
+  nav.toc { display: none; }
+  main { margin-left: 0; padding: 0; }
+}</style>
+</head>
+<body class="has-toc">
+  <nav class="toc"><div class="toc-title">目录</div><ul><li class="toc-depth-1"><a href="#图形推理知识图谱">图形推理知识图谱</a></li><li class="toc-depth-2"><a href="#整体知识结构">整体知识结构</a></li><li class="toc-depth-2"><a href="#一位置规律">一、位置规律</a></li><li class="toc-depth-3"><a href="#11-平移">1.1 平移</a></li><li class="toc-depth-3"><a href="#12-旋转">1.2 旋转</a></li><li class="toc-depth-3"><a href="#13-翻转">1.3 翻转</a></li><li class="toc-depth-2"><a href="#二样式规律">二、样式规律</a></li><li class="toc-depth-3"><a href="#21-遍历">2.1 遍历</a></li><li class="toc-depth-3"><a href="#22-叠加黑白叠加">2.2 叠加（黑白叠加）</a></li><li class="toc-depth-3"><a href="#23-求同">2.3 求同</a></li><li class="toc-depth-3"><a href="#24-求异">2.4 求异</a></li><li class="toc-depth-2"><a href="#三属性规律">三、属性规律</a></li><li class="toc-depth-3"><a href="#31-对称性">3.1 对称性</a></li><li class="toc-depth-3"><a href="#32-曲直性">3.2 曲直性</a></li><li class="toc-depth-3"><a href="#33-封闭开放性">3.3 封闭开放性</a></li><li class="toc-depth-2"><a href="#四数量规律">四、数量规律</a></li><li class="toc-depth-3"><a href="#总览口诀点线角面素">总览口诀：点线角面素</a></li><li class="toc-depth-3"><a href="#41-点">4.1 点</a></li><li class="toc-depth-3"><a href="#42-线">4.2 线</a></li><li class="toc-depth-4"><a href="#笔画数专题极高频">★ 笔画数专题（极高频）</a></li><li class="toc-depth-3"><a href="#43-角">4.3 角</a></li><li class="toc-depth-3"><a href="#44-面">4.4 面</a></li><li class="toc-depth-3"><a href="#45-素">4.5 素</a></li><li class="toc-depth-2"><a href="#五空间重构">五、空间重构</a></li><li class="toc-depth-3"><a href="#51-折纸盒问题六面体">5.1 折纸盒问题（六面体）</a></li><li class="toc-depth-4"><a href="#核心方法">核心方法</a></li><li class="toc-depth-3"><a href="#52-三视图">5.2 三视图</a></li><li class="toc-depth-3"><a href="#53-截面图">5.3 截面图</a></li><li class="toc-depth-2"><a href="#六拼合与截面">六、拼合与截面</a></li><li class="toc-depth-3"><a href="#61-平面拼合">6.1 平面拼合</a></li><li class="toc-depth-3"><a href="#62-立体拼合">6.2 立体拼合</a></li><li class="toc-depth-2"><a href="#七做题策略速查表">七、做题策略速查表</a></li><li class="toc-depth-3"><a href="#判断优先级总结">判断优先级总结</a></li><li class="toc-depth-2"><a href="#八高频考点星级汇总">八、高频考点星级汇总</a></li><li class="toc-depth-2"><a href="#九常见易错点清单">九、常见易错点清单</a></li></ul></nav>
+  <main><article><h1 id="图形推理知识图谱">图形推理知识图谱</h1>
+<h2 id="整体知识结构">整体知识结构</h2>
+<div class="markmap-container"><div class="markmap-host" id="markmap-0" data-markmap="%7B%22content%22%3A%22%26%23x56fe%3B%26%23x5f62%3B%26%23x63a8%3B%26%23x7406%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x4f4d%3B%26%23x7f6e%3B%26%23x89c4%3B%26%23x5f8b%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x5e73%3B%26%23x79fb%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%222%2C3%22%7D%7D%2C%7B%22content%22%3A%22%26%23x65cb%3B%26%23x8f6c%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%223%2C4%22%7D%7D%2C%7B%22content%22%3A%22%26%23x7ffb%3B%26%23x8f6c%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%224%2C5%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%221%2C2%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6837%3B%26%23x5f0f%3B%26%23x89c4%3B%26%23x5f8b%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x904d%3B%26%23x5386%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%226%2C7%22%7D%7D%2C%7B%22content%22%3A%22%26%23x53e0%3B%26%23x52a0%3B%26%23xff08%3B%26%23x9ed1%3B%26%23x767d%3B%26%23x53e0%3B%26%23x52a0%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%227%2C8%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6c42%3B%26%23x540c%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%228%2C9%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6c42%3B%26%23x5f02%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%229%2C10%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%225%2C6%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5c5e%3B%26%23x6027%3B%26%23x89c4%3B%26%23x5f8b%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x5bf9%3B%26%23x79f0%3B%26%23x6027%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2211%2C12%22%7D%7D%2C%7B%22content%22%3A%22%26%23x66f2%3B%26%23x76f4%3B%26%23x6027%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2212%2C13%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5c01%3B%26%23x95ed%3B%26%23x5f00%3B%26%23x653e%3B%26%23x6027%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2213%2C14%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2210%2C11%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6570%3B%26%23x91cf%3B%26%23x89c4%3B%26%23x5f8b%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x70b9%3B%26%23xff08%3B%26%23x4ea4%3B%26%23x70b9%3B%26%23x3001%3B%26%23x5207%3B%26%23x70b9%3B%26%23x3001%3B%26%23x9876%3B%26%23x70b9%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2215%2C16%22%7D%7D%2C%7B%22content%22%3A%22%26%23x7ebf%3B%26%23xff08%3B%26%23x76f4%3B%26%23x7ebf%3B%26%23x3001%3B%26%23x66f2%3B%26%23x7ebf%3B%26%23x3001%3B%26%23x7b14%3B%26%23x753b%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2216%2C17%22%7D%7D%2C%7B%22content%22%3A%22%26%23x89d2%3B%26%23xff08%3B%26%23x9510%3B%26%23x89d2%3B%26%23x3001%3B%26%23x76f4%3B%26%23x89d2%3B%26%23x3001%3B%26%23x949d%3B%26%23x89d2%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2217%2C18%22%7D%7D%2C%7B%22content%22%3A%22%26%23x9762%3B%26%23xff08%3B%26%23x5c01%3B%26%23x95ed%3B%26%23x533a%3B%26%23x57df%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2218%2C19%22%7D%7D%2C%7B%22content%22%3A%22%26%23x7d20%3B%26%23xff08%3B%26%23x5143%3B%26%23x7d20%3B%26%23x79cd%3B%26%23x7c7b%3B%26%23x3001%3B%26%23x4e2a%3B%26%23x6570%3B%26%23x3001%3B%26%23x90e8%3B%26%23x5206%3B%26%23x6570%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2219%2C20%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2214%2C15%22%7D%7D%2C%7B%22content%22%3A%22%26%23x7a7a%3B%26%23x95f4%3B%26%23x91cd%3B%26%23x6784%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x6298%3B%26%23x7eb8%3B%26%23x76d2%3B%26%23x95ee%3B%26%23x9898%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2221%2C22%22%7D%7D%2C%7B%22content%22%3A%22%26%23x4e09%3B%26%23x89c6%3B%26%23x56fe%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2222%2C23%22%7D%7D%2C%7B%22content%22%3A%22%26%23x622a%3B%26%23x9762%3B%26%23x56fe%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2223%2C24%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2220%2C21%22%7D%7D%2C%7B%22content%22%3A%22%26%23x62fc%3B%26%23x5408%3B%26%23x4e0e%3B%26%23x622a%3B%26%23x9762%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x5e73%3B%26%23x9762%3B%26%23x62fc%3B%26%23x5408%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2225%2C26%22%7D%7D%2C%7B%22content%22%3A%22%26%23x7acb%3B%26%23x4f53%3B%26%23x62fc%3B%26%23x5408%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2226%2C27%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2224%2C25%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h1%22%2C%22lines%22%3A%220%2C1%22%7D%7D"><svg></svg></div></div><hr>
+<h2 id="一位置规律">一、位置规律</h2>
+<blockquote>
+<p><strong>核心判断依据</strong>：图形<strong>组成元素相同</strong>，只是<strong>位置不同</strong> → 优先考虑位置规律。</p>
+</blockquote>
+<h3 id="11-平移">1.1 平移</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>方向</strong></td>
+<td>上下平移、左右平移、沿对角线平移、绕圈（顺时针/逆时针）移动</td>
+</tr>
+<tr>
+<td><strong>步长</strong></td>
+<td>恒定步长（每次移 1 格）、递增步长（1→2→3）、递减步长</td>
+</tr>
+<tr>
+<td><strong>路径</strong></td>
+<td>直线行进、环形行进、到边界反弹或穿越</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>元素整体平移 vs 单个元素独立平移（★★★）</li>
+<li>多个元素分别以不同规律平移（★★★）</li>
+<li>平移到边界后&quot;穿越&quot;回到对侧（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>忽略元素可以重叠，误以为&quot;不能走到同一位置&quot;</li>
+<li>看到元素移动方向不一致时，忘记检查是否各自遵循独立规律</li>
+</ul>
+<h3 id="12-旋转">1.2 旋转</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>方向</strong></td>
+<td>顺时针 / 逆时针</td>
+</tr>
+<tr>
+<td><strong>角度</strong></td>
+<td>恒定角度（每次 45°/60°/90°/180°）、递变角度</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>整体旋转 vs 内外层分别旋转（★★★）</li>
+<li>旋转 + 缩放组合（★★）</li>
+<li>时针方向与角度的配合判断（★★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>旋转 180° 容易与翻转混淆，需区分：旋转是同一面内转，翻转为面外翻转</li>
+<li>多层图形只旋转了其中一层，容易遗漏</li>
+</ul>
+<h3 id="13-翻转">1.3 翻转</h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>左右翻转</strong></td>
+<td>沿竖轴对称翻转（镜像）</td>
+</tr>
+<tr>
+<td><strong>上下翻转</strong></td>
+<td>沿横轴对称翻转</td>
+</tr>
+<tr>
+<td><strong>交替翻转</strong></td>
+<td>左右→上下→左右交替进行</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>翻转与旋转的区分（★★★）</li>
+<li>每隔一次翻转一次（奇偶项规律）（★★）</li>
+<li>翻转方向变化（先左右后上下）（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>翻转 180° 与旋转 180° 效果可能相同（注意判断前提）</li>
+<li>翻转后图形内部细节方向也会改变，容易被忽略</li>
+</ul>
+<hr>
+<h2 id="二样式规律">二、样式规律</h2>
+<blockquote>
+<p><strong>核心判断依据</strong>：图形<strong>组成元素相似</strong>，存在相同和不同部分 → 优先考虑样式规律。</p>
+</blockquote>
+<h3 id="21-遍历">2.1 遍历</h3>
+<p><strong>定义</strong>：所有元素在各位置上各出现一次（类似于&quot;每行每列都要涵盖&quot;）。</p>
+<p><strong>常见形式</strong>：</p>
+<ul>
+<li><strong>九宫格遍历</strong>：每行或每列包含所有元素各一次</li>
+<li><strong>位置遍历</strong>：每种元素在各个位置（上、下、左、右、中）各出现一次</li>
+<li><strong>样式遍历</strong>：颜色、形状、大小等属性在每一组中完整呈现</li>
+</ul>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>九宫格&quot;每行缺什么补什么&quot;（★★★）</li>
+<li>元素种类 + 位置的双重遍历（★★★）</li>
+<li>属性遍历（如每行必须出现一种填充模式）（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>遍历不仅仅是&quot;形状&quot;，还可能是颜色、大小、线型等属性</li>
+<li>九宫格既可按行看，也可按列看，需灵活切换</li>
+</ul>
+<h3 id="22-叠加黑白叠加">2.2 叠加（黑白叠加）</h3>
+<p><strong>核心公式</strong>（以黑白块为例）：</p>
+<table>
+<thead>
+<tr>
+<th>叠加类型</th>
+<th>典型规则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>同色叠加</strong></td>
+<td>黑+黑=白，白+白=白（或黑）</td>
+</tr>
+<tr>
+<td><strong>异色叠加</strong></td>
+<td>黑+白=黑（或白）</td>
+</tr>
+<tr>
+<td><strong>保留型</strong></td>
+<td>有黑则黑（去同存异 / 去异存同）</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>九宫格叠加：第一图 + 第二图 = 第三图（★★★）</li>
+<li>自定义叠加规则（题干给出规则表）（★★★）</li>
+<li>叠加 + 位置变化组合（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>叠加规则必须从题干中严格推导，不能主观假设</li>
+<li>&quot;有黑则黑&quot;与&quot;去同存异&quot;不是同一回事，需仔细区分</li>
+</ul>
+<h3 id="23-求同">2.3 求同</h3>
+<p><strong>定义</strong>：多个图形保留<strong>相同的部分</strong>，去除不同的部分。</p>
+<ul>
+<li><strong>直接求同</strong>：提取所有图形共有的元素/线条</li>
+<li><strong>属性求同</strong>：所有图形共有某个属性特征（如都是轴对称）</li>
+</ul>
+<h3 id="24-求异">2.4 求异</h3>
+<p><strong>定义</strong>：多个图形<strong>去除相同部分</strong>，保留不同部分。</p>
+<ul>
+<li>去掉共有线条/元素，只留独特部分</li>
+<li>常与叠加规律结合出现</li>
+</ul>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>去同存异 / 去异存同（★★★）</li>
+<li>求同求异与属性规律的结合（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>求同求异的对象是&quot;线条/元素&quot;还是&quot;区域&quot;，要明确</li>
+<li>题干中图形差异较大时，先看属性再考虑样式</li>
+</ul>
+<hr>
+<h2 id="三属性规律">三、属性规律</h2>
+<blockquote>
+<p><strong>核心判断依据</strong>：图形<strong>各不相同</strong>，但存在某种<strong>共同属性</strong> → 优先考虑属性规律。</p>
+</blockquote>
+<div class="markmap-container"><div class="markmap-host" id="markmap-1" data-markmap="%7B%22content%22%3A%22%26%23x5c5e%3B%26%23x6027%3B%26%23x89c4%3B%26%23x5f8b%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x5bf9%3B%26%23x79f0%3B%26%23x6027%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x8f74%3B%26%23x5bf9%3B%26%23x79f0%3B%26%23xff08%3B%26%23x5bf9%3B%26%23x79f0%3B%26%23x8f74%3B%26%23x6570%3B%26%23x91cf%3B%26%23x4e0e%3B%26%23x65b9%3B%26%23x5411%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%222%2C3%22%7D%7D%2C%7B%22content%22%3A%22%26%23x4e2d%3B%26%23x5fc3%3B%26%23x5bf9%3B%26%23x79f0%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%223%2C4%22%7D%7D%2C%7B%22content%22%3A%22%26%23x65e2%3B%26%23x662f%3B%26%23x8f74%3B%26%23x5bf9%3B%26%23x79f0%3B%26%23x53c8%3B%26%23x662f%3B%26%23x4e2d%3B%26%23x5fc3%3B%26%23x5bf9%3B%26%23x79f0%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%224%2C5%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%221%2C2%22%7D%7D%2C%7B%22content%22%3A%22%26%23x66f2%3B%26%23x76f4%3B%26%23x6027%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x5168%3B%26%23x76f4%3B%26%23x7ebf%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%226%2C7%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5168%3B%26%23x66f2%3B%26%23x7ebf%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%227%2C8%22%7D%7D%2C%7B%22content%22%3A%22%26%23x66f2%3B%26%23x76f4%3B%26%23x7ed3%3B%26%23x5408%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%228%2C9%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%225%2C6%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5c01%3B%26%23x95ed%3B%26%23x5f00%3B%26%23x653e%3B%26%23x6027%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x5168%3B%26%23x5c01%3B%26%23x95ed%3B%26%23x56fe%3B%26%23x5f62%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2210%2C11%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5168%3B%26%23x5f00%3B%26%23x653e%3B%26%23x56fe%3B%26%23x5f62%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2211%2C12%22%7D%7D%2C%7B%22content%22%3A%22%26%23x534a%3B%26%23x5c01%3B%26%23x95ed%3B%26%23x534a%3B%26%23x5f00%3B%26%23x653e%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2212%2C13%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%229%2C10%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h1%22%2C%22lines%22%3A%220%2C1%22%7D%7D"><svg></svg></div></div><h3 id="31-对称性">3.1 对称性</h3>
+<table>
+<thead>
+<tr>
+<th>子类型</th>
+<th>说明</th>
+<th>高频度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>轴对称</strong></td>
+<td>存在对称轴（1 条或多条）</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>中心对称</strong></td>
+<td>绕某点旋转 180° 后与原图重合</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>对称轴数量</strong></td>
+<td>1 条、2 条、3 条……规律递变</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>对称轴方向</strong></td>
+<td>竖轴、横轴、斜轴（角度变化）</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>对称轴旋转</strong></td>
+<td>对称轴本身在旋转（如每次旋转 45°）</td>
+<td>★★</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>对称轴数量递变（1→2→3→4）（★★★）</li>
+<li>对称轴方向旋转（★★★）</li>
+<li>多图形对称轴之间的关系（平行、垂直、成角度）（★★★）</li>
+<li>既是轴对称又是中心对称的图形判定（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>平行四边形是中心对称但不是轴对称——容易混淆</li>
+<li>正三角形有 3 条对称轴，正方形有 4 条——对称轴数量记忆不清</li>
+<li>对称轴经过某条线 / 经过交点 / 经过某个元素——细致考点易漏</li>
+</ul>
+<h3 id="32-曲直性">3.2 曲直性</h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>示例</th>
+<th>判定要点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>全直线图形</strong></td>
+<td>三角形、矩形、五边形</td>
+<td>只含直线段</td>
+</tr>
+<tr>
+<td><strong>全曲线图形</strong></td>
+<td>圆、椭圆</td>
+<td>只含曲线</td>
+</tr>
+<tr>
+<td><strong>曲直结合</strong></td>
+<td>半圆+三角形</td>
+<td>同时含直线和曲线</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>曲直性交替出现（直→曲→直→曲）（★★★）</li>
+<li>全直 / 全曲 / 曲+直 三者循环（★★★）</li>
+<li>曲线数量与直线数量的关系（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>含有弧线的图形不再属于&quot;全直线&quot;，哪怕弧线很短</li>
+<li>曲直性与封闭性容易混在一起考，需分别判定</li>
+</ul>
+<h3 id="33-封闭开放性">3.3 封闭开放性</h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>全封闭</strong></td>
+<td>所有区域都被线条包围（如圆、正方形）</td>
+</tr>
+<tr>
+<td><strong>全开放</strong></td>
+<td>没有任何封闭区域（如一条线段、开放折线）</td>
+</tr>
+<tr>
+<td><strong>半封闭半开放</strong></td>
+<td>部分区域封闭，部分开放</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>封闭 / 开放交替出现（★★★）</li>
+<li>封闭区域数量递变（★★★）</li>
+<li>封闭性与曲直性组合考察（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>判断&quot;封闭&quot;只看是否有完全封闭的区域，不要求整个图形封闭</li>
+<li>字母类图形（A 封闭，B 半封闭，C 开放）是常见考法</li>
+</ul>
+<hr>
+<h2 id="四数量规律">四、数量规律</h2>
+<blockquote>
+<p><strong>核心判断依据</strong>：图形<strong>各不相同且无明显共同属性</strong> → 数&quot;点、线、角、面、素&quot;的数量规律。</p>
+</blockquote>
+<h3 id="总览口诀点线角面素">总览口诀：<strong>点线角面素</strong></h3>
+<div class="markmap-container"><div class="markmap-host" id="markmap-2" data-markmap="%7B%22content%22%3A%22%26%23x6570%3B%26%23x91cf%3B%26%23x89c4%3B%26%23x5f8b%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x70b9%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x4ea4%3B%26%23x70b9%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%222%2C3%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5207%3B%26%23x70b9%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%223%2C4%22%7D%7D%2C%7B%22content%22%3A%22%26%23x7ebf%3B%26%23x4e0e%3B%26%23x7ebf%3B%26%23x7684%3B%26%23x4ea4%3B%26%23x70b9%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%224%2C5%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5185%3B%26%23x90e8%3B%2F%26%23x5916%3B%26%23x90e8%3B%26%23x4ea4%3B%26%23x70b9%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%225%2C6%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%221%2C2%22%7D%7D%2C%7B%22content%22%3A%22%26%23x7ebf%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x76f4%3B%26%23x7ebf%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%227%2C8%22%7D%7D%2C%7B%22content%22%3A%22%26%23x66f2%3B%26%23x7ebf%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%228%2C9%22%7D%7D%2C%7B%22content%22%3A%22%26%23x603b%3B%26%23x7ebf%3B%26%23x6bb5%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%229%2C10%22%7D%7D%2C%7B%22content%22%3A%22%26%23x7b14%3B%26%23x753b%3B%26%23x6570%3B%26%23xff08%3B%26%23x4e00%3B%26%23x7b14%3B%26%23x753b%3B%2F%26%23x591a%3B%26%23x7b14%3B%26%23x753b%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2210%2C11%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6700%3B%26%23x957f%3B%26%23x7ebf%3B%2F%26%23x6700%3B%26%23x77ed%3B%26%23x7ebf%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2211%2C12%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%226%2C7%22%7D%7D%2C%7B%22content%22%3A%22%26%23x89d2%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x9510%3B%26%23x89d2%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2213%2C14%22%7D%7D%2C%7B%22content%22%3A%22%26%23x76f4%3B%26%23x89d2%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2214%2C15%22%7D%7D%2C%7B%22content%22%3A%22%26%23x949d%3B%26%23x89d2%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2215%2C16%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6700%3B%26%23x5927%3B%26%23x89d2%3B%2F%26%23x6700%3B%26%23x5c0f%3B%26%23x89d2%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2216%2C17%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2212%2C13%22%7D%7D%2C%7B%22content%22%3A%22%26%23x9762%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x5c01%3B%26%23x95ed%3B%26%23x533a%3B%26%23x57df%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2218%2C19%22%7D%7D%2C%7B%22content%22%3A%22%26%23x9762%3B%26%23x79ef%3B%26%23x5927%3B%26%23x5c0f%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2219%2C20%22%7D%7D%2C%7B%22content%22%3A%22%26%23x9762%3B%26%23x7684%3B%26%23x5f62%3B%26%23x72b6%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2220%2C21%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6700%3B%26%23x5927%3B%26%23x9762%3B%2F%26%23x6700%3B%26%23x5c0f%3B%26%23x9762%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2221%2C22%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2217%2C18%22%7D%7D%2C%7B%22content%22%3A%22%26%23x7d20%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x5143%3B%26%23x7d20%3B%26%23x79cd%3B%26%23x7c7b%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2223%2C24%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5143%3B%26%23x7d20%3B%26%23x4e2a%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2224%2C25%22%7D%7D%2C%7B%22content%22%3A%22%26%23x90e8%3B%26%23x5206%3B%26%23x6570%3B%26%23xff08%3B%26%23x8fde%3B%26%23x901a%3B%26%23x4f53%3B%26%23x6570%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2225%2C26%22%7D%7D%2C%7B%22content%22%3A%22%26%23x79cd%3B%26%23x7c7b%3B%26%23x4e0e%3B%26%23x4e2a%3B%26%23x6570%3B%26%23x7684%3B%26%23x8fd0%3B%26%23x7b97%3B%26%23x5173%3B%26%23x7cfb%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2226%2C27%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2222%2C23%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h1%22%2C%22lines%22%3A%220%2C1%22%7D%7D"><svg></svg></div></div><h3 id="41-点">4.1 点</h3>
+<table>
+<thead>
+<tr>
+<th>计数对象</th>
+<th>说明</th>
+<th>高频度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>线与线交点</strong></td>
+<td>所有交点数量</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>切点</strong></td>
+<td>直线与曲线相切的点</td>
+<td>★★</td>
+</tr>
+<tr>
+<td><strong>顶点</strong></td>
+<td>多边形的顶点</td>
+<td>★★</td>
+</tr>
+<tr>
+<td><strong>内部交点</strong></td>
+<td>图形内部的交点（排除外部）</td>
+<td>★★</td>
+</tr>
+<tr>
+<td><strong>线上交点</strong></td>
+<td>交点落在某条特定线上</td>
+<td>★★</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>交点数递变规律（2→3→4→5）（★★★）</li>
+<li>内部交点 vs 外部交点的差/和（★★★）</li>
+<li>交点与线段数量的关系（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>端点不算交点（除非题干明确暗示）</li>
+<li>交点落在边线上还是图形内部，需要严格区分</li>
+</ul>
+<h3 id="42-线">4.2 线</h3>
+<table>
+<thead>
+<tr>
+<th>计数对象</th>
+<th>说明</th>
+<th>高频度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>直线数</strong></td>
+<td>所有直线段的数量</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>曲线数</strong></td>
+<td>所有曲线的数量</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>笔画数</strong></td>
+<td>图形能几笔画出（奇点数÷2）</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>外部轮廓线</strong></td>
+<td>最外层线条数量</td>
+<td>★★</td>
+</tr>
+<tr>
+<td><strong>内部线条</strong></td>
+<td>图形内部的线段数</td>
+<td>★★</td>
+</tr>
+</tbody></table>
+<h4 id="笔画数专题极高频">★ 笔画数专题（极高频）</h4>
+<p><strong>判定规则</strong>：</p>
+<ul>
+<li><strong>奇点</strong>：从一个点引出<strong>奇数条线</strong>的点</li>
+<li>0 个或 2 个奇点 → <strong>一笔画</strong>图形</li>
+<li>奇点数 ÷ 2 = 笔画数</li>
+</ul>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>一笔画 vs 多笔画判定（★★★）</li>
+<li>笔画数递变（1→2→3）（★★★）</li>
+<li>常见一笔画图形：五角星、&quot;日&quot;字型、&quot;田&quot;字型变体（★★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>端点也算奇点（只引出 1 条线）</li>
+<li>曲线上的奇点判定容易出错</li>
+<li>奇点数为 0（如圆、矩形）是一笔画</li>
+</ul>
+<h3 id="43-角">4.3 角</h3>
+<table>
+<thead>
+<tr>
+<th>计数对象</th>
+<th>说明</th>
+<th>高频度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>直角数</strong></td>
+<td>90° 角的个数</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>锐角数</strong></td>
+<td>小于 90° 的角</td>
+<td>★★</td>
+</tr>
+<tr>
+<td><strong>钝角数</strong></td>
+<td>大于 90° 的角</td>
+<td>★★</td>
+</tr>
+<tr>
+<td><strong>最大角</strong></td>
+<td>图形中角度最大的角</td>
+<td>★★</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>直角数量递变（★★★）</li>
+<li>角的种类与数量组合（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>数角时注意不要遗漏内部角</li>
+<li>规律可能在角的&quot;种类&quot;而非&quot;数量&quot;上（如全是直角→全是锐角→全是钝角）</li>
+</ul>
+<h3 id="44-面">4.4 面</h3>
+<table>
+<thead>
+<tr>
+<th>计数对象</th>
+<th>说明</th>
+<th>高频度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>封闭区域数</strong></td>
+<td>被线条完全包围的区域个数</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>面积关系</strong></td>
+<td>各区域面积的大小关系</td>
+<td>★★</td>
+</tr>
+<tr>
+<td><strong>面的形状</strong></td>
+<td>封闭区域是什么形状（三角形、四边形……）</td>
+<td>★★</td>
+</tr>
+<tr>
+<td><strong>最大面/最小面</strong></td>
+<td>最大的面是什么形状、什么特征</td>
+<td>★★★</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>封闭区域数递变（★★★）</li>
+<li>最大面的形状规律（如最大面都是三角形）（★★★）</li>
+<li>面积占比关系（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>封闭区域数 ≠ 元素个数（一个圆内画一条直径 = 2 个封闭区域）</li>
+<li>注意区分&quot;面&quot;的数量与&quot;素&quot;的数量</li>
+</ul>
+<h3 id="45-素">4.5 素</h3>
+<table>
+<thead>
+<tr>
+<th>计数对象</th>
+<th>说明</th>
+<th>高频度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>元素种类数</strong></td>
+<td>有几种不同的元素</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>元素个数</strong></td>
+<td>一共有多少个元素</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>部分数（连通体数）</strong></td>
+<td>图形有几个互不相连的部分</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td><strong>种类与个数的运算</strong></td>
+<td>个数 − 种类 = ?</td>
+<td>★★</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>种类数 vs 个数的差值恒定（★★★）</li>
+<li>部分数递变（★★★）</li>
+<li>同种元素的个数规律（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>&quot;部分数&quot;是连通体的数量，与元素种类无关</li>
+<li>相同形状但大小不同 → 是否算同种元素需看题干约定</li>
+</ul>
+<hr>
+<h2 id="五空间重构">五、空间重构</h2>
+<h3 id="51-折纸盒问题六面体">5.1 折纸盒问题（六面体）</h3>
+<div class="markmap-container"><div class="markmap-host" id="markmap-3" data-markmap="%7B%22content%22%3A%22%26%23x6298%3B%26%23x7eb8%3B%26%23x76d2%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x57fa%3B%26%23x7840%3B%26%23x77e5%3B%26%23x8bc6%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x516d%3B%26%23x9762%3B%26%23x4f53%3B%26%23x5171%3B%26%23x6709%3B%2011%20%26%23x79cd%3B%26%23x5c55%3B%26%23x5f00%3B%26%23x56fe%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%222%2C3%22%7D%7D%2C%7B%22content%22%3A%22%26%23x76f8%3B%26%23x5bf9%3B%26%23x9762%3B%26%23x5fc5%3B%26%23x987b%3B%26%23x76f8%3B%26%23x9694%3B%26%23x4e00%3B%26%23x683c%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%223%2C4%22%7D%7D%2C%7B%22content%22%3A%22%26%23x76f8%3B%26%23x90bb%3B%26%23x9762%3B%26%23x6709%3B%26%23x4e00%3B%26%23x6761%3B%26%23x516c%3B%26%23x5171%3B%26%23x8fb9%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%224%2C5%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%221%2C2%22%7D%7D%2C%7B%22content%22%3A%22%26%23x505a%3B%26%23x9898%3B%26%23x65b9%3B%26%23x6cd5%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x76f8%3B%26%23x5bf9%3B%26%23x9762%3B%26%23x6392%3B%26%23x9664%3B%26%23x6cd5%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%226%2C7%22%7D%7D%2C%7B%22content%22%3A%22%26%23x516c%3B%26%23x5171%3B%26%23x8fb9%3B%26%23x5224%3B%26%23x65ad%3B%26%23x6cd5%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%227%2C8%22%7D%7D%2C%7B%22content%22%3A%22%26%23x753b%3B%26%23x8fb9%3B%26%23x6cd5%3B%26%23xff08%3B%26%23x7bad%3B%26%23x5934%3B%26%23x6cd5%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%228%2C9%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5750%3B%26%23x6807%3B%26%23x6cd5%3B%26%23xff08%3B%26%23x7acb%3B%26%23x4f53%3B%26%23x5750%3B%26%23x6807%3B%26%23x7cfb%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%229%2C10%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%225%2C6%22%7D%7D%2C%7B%22content%22%3A%22%26%23x9ad8%3B%26%23x7ea7%3B%26%23x6280%3B%26%23x5de7%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22L%20%26%23x578b%3B%26%23x7ed3%3B%26%23x6784%3B%26%23x8bc6%3B%26%23x522b%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2211%2C12%22%7D%7D%2C%7B%22content%22%3A%22Z%20%26%23x578b%3B%26%23x7ed3%3B%26%23x6784%3B%26%23x8bc6%3B%26%23x522b%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2212%2C13%22%7D%7D%2C%7B%22content%22%3A%22%26%23x4e00%3B%26%23x5b57%3B%26%23x578b%3B%26%23x7ed3%3B%26%23x6784%3B%26%23x8bc6%3B%26%23x522b%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2213%2C14%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2210%2C11%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h1%22%2C%22lines%22%3A%220%2C1%22%7D%7D"><svg></svg></div></div><h4 id="核心方法">核心方法</h4>
+<p><strong>① 相对面排除法</strong></p>
+<ul>
+<li>展开图中相隔一个面的两个面为相对面</li>
+<li>相对面在立体图中<strong>不可能同时被看到</strong></li>
+<li>看到选项同时出现相对面 → 直接排除</li>
+</ul>
+<p><strong>② 公共边判断法</strong></p>
+<ul>
+<li>两个相邻面共享的边在展开图和立体图中必须一致</li>
+<li>展开图中两个面之间的公共边位置固定</li>
+</ul>
+<p><strong>③ 画边法（箭头法）</strong></p>
+<ul>
+<li>选定一个面画箭头</li>
+<li>箭头的起点和方向在展开图和立体图中一一对应</li>
+<li>箭头指向的相邻面必须一致</li>
+</ul>
+<p><strong>④ 坐标法</strong></p>
+<ul>
+<li>将立体图放在坐标系中</li>
+<li>对每个面标记上下左右方向</li>
+<li>比对展开图和选项的方向是否一致</li>
+</ul>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>11 种展开图模式识别（★★★）</li>
+<li>相对面规则（★★★）</li>
+<li>画边法的灵活应用（★★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>展开图旋转后形态不同但本质一样</li>
+<li>忽略折叠后图形的翻转效应（上下左右会变）</li>
+</ul>
+<h3 id="52-三视图">5.2 三视图</h3>
+<table>
+<thead>
+<tr>
+<th>视图</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>主视图（正视图）</strong></td>
+<td>从正面看（前后方向投影）</td>
+</tr>
+<tr>
+<td><strong>俯视图</strong></td>
+<td>从上方看（上下方向投影）</td>
+</tr>
+<tr>
+<td><strong>左视图/右视图</strong></td>
+<td>从左侧/右侧看</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>给定立体图选三视图（★★★）</li>
+<li>给定三视图选立体图（★★★）</li>
+<li>判断哪个视图是错误的（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>被遮挡的部分在视图中不可见（实线 vs 虚线）</li>
+<li>俯视图的方向（哪边是前哪边是后）容易搞反</li>
+<li>视图中的线条可能重叠，看不到的线不画</li>
+</ul>
+<h3 id="53-截面图">5.3 截面图</h3>
+<p><strong>定义</strong>：用一个平面去截立体图形，截得的面的形状。</p>
+<table>
+<thead>
+<tr>
+<th>立体图形</th>
+<th>可能的截面形状</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>正方体</strong></td>
+<td>三角形、四边形（矩形/梯形）、五边形、六边形</td>
+</tr>
+<tr>
+<td><strong>圆柱</strong></td>
+<td>圆、椭圆、矩形</td>
+</tr>
+<tr>
+<td><strong>圆锥</strong></td>
+<td>三角形、椭圆、圆</td>
+</tr>
+<tr>
+<td><strong>球</strong></td>
+<td>圆（任意方向都是圆）</td>
+</tr>
+<tr>
+<td><strong>棱锥</strong></td>
+<td>三角形、四边形、多边形</td>
+</tr>
+</tbody></table>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>判断给定截面是否可能（★★★）</li>
+<li>截面形状的边数与切割方向的关系（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>正方体不可能截出七边形及以上</li>
+<li>截面与棱的交点数量决定了截面边数</li>
+<li>切割方向不同，同一立体图形截面形状不同</li>
+</ul>
+<hr>
+<h2 id="六拼合与截面">六、拼合与截面</h2>
+<h3 id="61-平面拼合">6.1 平面拼合</h3>
+<p><strong>题型特征</strong>：将若干平面图形拼合成目标图形（类似七巧板）。</p>
+<p><strong>解题策略</strong>：</p>
+<ul>
+<li><strong>找特殊边</strong>：先放有斜边、曲线等特殊形状的碎片</li>
+<li><strong>面积匹配</strong>：碎片面积之和 = 目标面积</li>
+<li><strong>排除法</strong>：某个碎片不可能放入时排除对应选项</li>
+<li><strong>边长匹配</strong>：碎片的边长必须与目标图形吻合</li>
+</ul>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>选择哪组碎片能拼出目标图形（★★★）</li>
+<li>判断拼合方式是否正确（★★）</li>
+</ul>
+<p><strong>易错点</strong>：</p>
+<ul>
+<li>碎片可以旋转和翻转，不要只看一个方向</li>
+<li>注意碎片的面积和比例关系</li>
+</ul>
+<h3 id="62-立体拼合">6.2 立体拼合</h3>
+<p><strong>题型特征</strong>：用多个小立体拼合成大立体。</p>
+<p><strong>解题策略</strong>：</p>
+<ul>
+<li>数小立体的个数</li>
+<li>从层数和每层的结构入手</li>
+<li>逐层分析拼合方式</li>
+</ul>
+<p><strong>高频考点</strong>：</p>
+<ul>
+<li>判断拼合后缺少哪块（★★★）</li>
+<li>计算需要多少个小立体（★★）</li>
+</ul>
+<hr>
+<h2 id="七做题策略速查表">七、做题策略速查表</h2>
+<blockquote>
+<p>拿到图形推理题，按以下顺序判断规律类型：</p>
+</blockquote>
+<div class="markmap-container"><div class="markmap-host" id="markmap-4" data-markmap="%7B%22content%22%3A%22%26%23x56fe%3B%26%23x5f62%3B%26%23x63a8%3B%26%23x7406%3B%26%23x505a%3B%26%23x9898%3B%26%23x987a%3B%26%23x5e8f%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22Step%201%3A%20%26%23x770b%3B%26%23x5143%3B%26%23x7d20%3B%26%23x7ec4%3B%26%23x6210%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x5143%3B%26%23x7d20%3B%26%23x76f8%3B%26%23x540c%3B%20%26%23x2192%3B%20%26%23x4f4d%3B%26%23x7f6e%3B%26%23x89c4%3B%26%23x5f8b%3B%26%23xff08%3B%26%23x5e73%3B%26%23x79fb%3B%2F%26%23x65cb%3B%26%23x8f6c%3B%2F%26%23x7ffb%3B%26%23x8f6c%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%222%2C3%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5143%3B%26%23x7d20%3B%26%23x76f8%3B%26%23x4f3c%3B%20%26%23x2192%3B%20%26%23x6837%3B%26%23x5f0f%3B%26%23x89c4%3B%26%23x5f8b%3B%26%23xff08%3B%26%23x904d%3B%26%23x5386%3B%2F%26%23x53e0%3B%26%23x52a0%3B%2F%26%23x6c42%3B%26%23x540c%3B%26%23x6c42%3B%26%23x5f02%3B%26%23xff09%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%223%2C4%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5143%3B%26%23x7d20%3B%26%23x4e0d%3B%26%23x540c%3B%20%26%23x2192%3B%20Step%202%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%224%2C5%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%221%2C2%22%7D%7D%2C%7B%22content%22%3A%22Step%202%3A%20%26%23x770b%3B%26%23x5c5e%3B%26%23x6027%3B%26%23x7279%3B%26%23x5f81%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x6709%3B%26%23x5bf9%3B%26%23x79f0%3B%26%23x6027%3B%20%26%23x2192%3B%20%26%23x5bf9%3B%26%23x79f0%3B%26%23x6027%3B%26%23x89c4%3B%26%23x5f8b%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%226%2C7%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6709%3B%26%23x66f2%3B%26%23x76f4%3B%26%23x5dee%3B%26%23x5f02%3B%20%26%23x2192%3B%20%26%23x66f2%3B%26%23x76f4%3B%26%23x6027%3B%26%23x89c4%3B%26%23x5f8b%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%227%2C8%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6709%3B%26%23x5c01%3B%26%23x95ed%3B%26%23x5f00%3B%26%23x653e%3B%26%23x5dee%3B%26%23x5f02%3B%20%26%23x2192%3B%20%26%23x5c01%3B%26%23x95ed%3B%26%23x5f00%3B%26%23x653e%3B%26%23x6027%3B%26%23x89c4%3B%26%23x5f8b%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%228%2C9%22%7D%7D%2C%7B%22content%22%3A%22%26%23x65e0%3B%26%23x660e%3B%26%23x663e%3B%26%23x5c5e%3B%26%23x6027%3B%20%26%23x2192%3B%20Step%203%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%229%2C10%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%225%2C6%22%7D%7D%2C%7B%22content%22%3A%22Step%203%3A%20%26%23x6570%3B%26%23x6570%3B%26%23x91cf%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x6570%3B%26%23x70b9%3B%20%26%23x2192%3B%20%26%23x4ea4%3B%26%23x70b9%3B%2F%26%23x5207%3B%26%23x70b9%3B%2F%26%23x9876%3B%26%23x70b9%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2211%2C12%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6570%3B%26%23x7ebf%3B%20%26%23x2192%3B%20%26%23x76f4%3B%26%23x7ebf%3B%2F%26%23x66f2%3B%26%23x7ebf%3B%2F%26%23x7b14%3B%26%23x753b%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2212%2C13%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6570%3B%26%23x89d2%3B%20%26%23x2192%3B%20%26%23x76f4%3B%26%23x89d2%3B%2F%26%23x9510%3B%26%23x89d2%3B%2F%26%23x949d%3B%26%23x89d2%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2213%2C14%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6570%3B%26%23x9762%3B%20%26%23x2192%3B%20%26%23x5c01%3B%26%23x95ed%3B%26%23x533a%3B%26%23x57df%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2214%2C15%22%7D%7D%2C%7B%22content%22%3A%22%26%23x6570%3B%26%23x7d20%3B%20%26%23x2192%3B%20%26%23x5143%3B%26%23x7d20%3B%26%23x79cd%3B%26%23x7c7b%3B%2F%26%23x4e2a%3B%26%23x6570%3B%2F%26%23x90e8%3B%26%23x5206%3B%26%23x6570%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2215%2C16%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2210%2C11%22%7D%7D%2C%7B%22content%22%3A%22Step%204%3A%20%26%23x7a7a%3B%26%23x95f4%3B%26%23x7c7b%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x6298%3B%26%23x7eb8%3B%26%23x76d2%3B%20%26%23x2192%3B%20%26%23x76f8%3B%26%23x5bf9%3B%26%23x9762%3B%2F%26%23x516c%3B%26%23x5171%3B%26%23x8fb9%3B%2F%26%23x753b%3B%26%23x8fb9%3B%26%23x6cd5%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2217%2C18%22%7D%7D%2C%7B%22content%22%3A%22%26%23x4e09%3B%26%23x89c6%3B%26%23x56fe%3B%20%26%23x2192%3B%20%26%23x65b9%3B%26%23x5411%3B%2B%26%23x906e%3B%26%23x6321%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2218%2C19%22%7D%7D%2C%7B%22content%22%3A%22%26%23x622a%3B%26%23x9762%3B%26%23x56fe%3B%20%26%23x2192%3B%20%26%23x5207%3B%26%23x5272%3B%26%23x65b9%3B%26%23x5411%3B%26%23x2192%3B%26%23x622a%3B%26%23x9762%3B%26%23x5f62%3B%26%23x72b6%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2219%2C20%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2216%2C17%22%7D%7D%2C%7B%22content%22%3A%22Step%205%3A%20%26%23x7ec4%3B%26%23x5408%3B%26%23x89c4%3B%26%23x5f8b%3B%22%2C%22children%22%3A%5B%7B%22content%22%3A%22%26%23x4f4d%3B%26%23x7f6e%3B%20%2B%20%26%23x6837%3B%26%23x5f0f%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2221%2C22%22%7D%7D%2C%7B%22content%22%3A%22%26%23x5c5e%3B%26%23x6027%3B%20%2B%20%26%23x6570%3B%26%23x91cf%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2222%2C23%22%7D%7D%2C%7B%22content%22%3A%22%26%23x591a%3B%26%23x91cd%3B%26%23x89c4%3B%26%23x5f8b%3B%26%23x53e0%3B%26%23x52a0%3B%22%2C%22children%22%3A%5B%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h3%22%2C%22lines%22%3A%2223%2C24%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h2%22%2C%22lines%22%3A%2220%2C21%22%7D%7D%5D%2C%22payload%22%3A%7B%22tag%22%3A%22h1%22%2C%22lines%22%3A%220%2C1%22%7D%7D"><svg></svg></div></div><h3 id="判断优先级总结">判断优先级总结</h3>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>规律类型</th>
+<th>判断信号</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>第 1</strong></td>
+<td>位置规律</td>
+<td>元素完全相同，位置变化</td>
+</tr>
+<tr>
+<td><strong>第 2</strong></td>
+<td>样式规律</td>
+<td>元素相似，有增有减</td>
+</tr>
+<tr>
+<td><strong>第 3</strong></td>
+<td>属性规律</td>
+<td>元素不同但有共同特征</td>
+</tr>
+<tr>
+<td><strong>第 4</strong></td>
+<td>数量规律</td>
+<td>元素完全不同，数数量</td>
+</tr>
+<tr>
+<td><strong>第 5</strong></td>
+<td>空间重构</td>
+<td>立体图形/展开图/视图</td>
+</tr>
+<tr>
+<td><strong>第 6</strong></td>
+<td>组合规律</td>
+<td>单一规律无法解释</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="八高频考点星级汇总">八、高频考点星级汇总</h2>
+<table>
+<thead>
+<tr>
+<th>考点</th>
+<th>星级</th>
+<th>出现频率</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>对称性（对称轴数量/方向）</td>
+<td>★★★</td>
+<td>每年必考</td>
+</tr>
+<tr>
+<td>笔画数（一笔画判定）</td>
+<td>★★★</td>
+<td>近 5 年高频</td>
+</tr>
+<tr>
+<td>封闭区域数</td>
+<td>★★★</td>
+<td>经典考点</td>
+</tr>
+<tr>
+<td>黑白叠加</td>
+<td>★★★</td>
+<td>九宫格常考</td>
+</tr>
+<tr>
+<td>折纸盒（相对面/画边法）</td>
+<td>★★★</td>
+<td>必考 1-2 题</td>
+</tr>
+<tr>
+<td>平移规律</td>
+<td>★★★</td>
+<td>基础题型</td>
+</tr>
+<tr>
+<td>遍历</td>
+<td>★★★</td>
+<td>九宫格常考</td>
+</tr>
+<tr>
+<td>直角数量</td>
+<td>★★</td>
+<td>近年升温</td>
+</tr>
+<tr>
+<td>部分数</td>
+<td>★★</td>
+<td>周期性出现</td>
+</tr>
+<tr>
+<td>交点数</td>
+<td>★★</td>
+<td>中频</td>
+</tr>
+<tr>
+<td>截面图</td>
+<td>★★</td>
+<td>空间类常考</td>
+</tr>
+<tr>
+<td>三视图</td>
+<td>★★</td>
+<td>空间类常考</td>
+</tr>
+<tr>
+<td>曲直性</td>
+<td>★★</td>
+<td>属性类常规</td>
+</tr>
+<tr>
+<td>求同求异</td>
+<td>★★</td>
+<td>样式类常规</td>
+</tr>
+<tr>
+<td>平面拼合</td>
+<td>★</td>
+<td>出现频率较低</td>
+</tr>
+<tr>
+<td>立体拼合</td>
+<td>★</td>
+<td>出现频率较低</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="九常见易错点清单">九、常见易错点清单</h2>
+<ol>
+<li><strong>对称性误判</strong>：平行四边形不是轴对称图形，菱形有 2 条对称轴而非 4 条</li>
+<li><strong>笔画数算错奇点</strong>：端点也是奇点；曲线上的端点也要算</li>
+<li><strong>封闭面与元素混淆</strong>：一个圆内画两条交叉直径 = 4 个封闭区域，但只有 1 个元素</li>
+<li><strong>翻转与旋转混淆</strong>：翻转是面外操作，旋转是面内操作</li>
+<li><strong>相对面同时出现</strong>：折纸盒中看到两个相对面同时出现在可视面 → 必错</li>
+<li><strong>截面边数判断错误</strong>：正方体最多截出六边形，不可能出现七边形</li>
+<li><strong>遍历遗漏属性</strong>：遍历不仅看形状，还要看颜色、大小、方向等属性</li>
+<li><strong>叠加规则臆造</strong>：叠加规则必须从题干中严格推导，不可假设&quot;黑+黑一定=白&quot;</li>
+<li><strong>三视图方向搞反</strong>：俯视图的前后方向与主视图的上下方向需要对应</li>
+<li><strong>数线时遗漏内部线</strong>：不要只数外框线，内部的线条也要计数</li>
+</ol>
+<hr>
+<blockquote>
+<p><strong>总结</strong>：图形推理的解题核心是**&quot;看元素组成 → 判断规律类型 → 验证规律&quot;**。掌握上述做题顺序和每个规律的核心判断信号，配合大量练习形成直觉，即可在考场上快速锁定答案。</p>
+</blockquote>
+</article></main>
+  <script src="./图形推理知识图谱-2026-04-16-09-57-51Z-assets/runtime/d3/dist/d3.min.js"></script>
+<script src="./图形推理知识图谱-2026-04-16-09-57-51Z-assets/runtime/markmap-view/dist/browser/index.js"></script>
+<script src="./图形推理知识图谱-2026-04-16-09-57-51Z-assets/runtime/markmap-toolbar/dist/index.js"></script>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Markmap init
+    if (window.markmap && window.markmap.Markmap) {
+      document.querySelectorAll('.markmap-host[data-markmap]').forEach(function(host) {
+        try {
+          var svg = host.querySelector('svg');
+          if (!svg) return;
+          var encoded = host.getAttribute('data-markmap') || '';
+          var data = JSON.parse(decodeURIComponent(encoded));
+          var mm = window.markmap.Markmap.create(svg, {
+            autoFit: true,
+            duration: 400,
+            fitRatio: 0.85,
+            maxWidth: 240,
+            initialExpandLevel: 2,
+          }, data);
+
+          if (window.markmap.Toolbar) {
+            var toolbar = window.markmap.Toolbar.create(mm);
+            toolbar.el.style.position = 'absolute';
+            toolbar.el.style.right = '12px';
+            toolbar.el.style.bottom = '12px';
+            host.appendChild(toolbar.el);
+          }
+        } catch (e) {
+          console.error('Markmap init failed', e);
+        }
+      });
+    }
+});
+
+
+// Tab switching
+function switchTab(event, panelId) {
+  var container = event.target.closest('.tabs');
+  if (!container) return;
+  container.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  container.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+  event.target.classList.add('active');
+  var panel = document.getElementById(panelId);
+  if (panel) panel.classList.add('active');
+}
+
+
+// TOC scroll highlight
+document.addEventListener('DOMContentLoaded', function() {
+  var nav = document.querySelector('nav.toc');
+  if (!nav) return;
+  var links = nav.querySelectorAll('a');
+  if (links.length === 0) return;
+  var headingIds = Array.from(links).map(function(a) { return a.getAttribute('href').slice(1); });
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        nav.querySelectorAll('li').forEach(function(li) { li.classList.remove('active'); });
+        var link = nav.querySelector('a[href="#' + entry.target.id + '"]');
+        if (link && link.parentElement) link.parentElement.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  headingIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+});
+</script>
+</body>
+</html>

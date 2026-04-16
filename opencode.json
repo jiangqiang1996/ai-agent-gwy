@@ -37,6 +37,7 @@
         "user-profile": true,
         "export-document": true,
         "grading": true,
+        "inline-html-resources": true,
         "question-generator": true,
         "write": false,
         "edit": false,

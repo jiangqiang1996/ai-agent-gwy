@@ -22,7 +22,7 @@
 
 - Manual: `user-profile` still exposes `updateMastery` in the action enum even though the path is deprecated and returns an error. Removing it cleanly may require a deliberate compatibility decision.
 - Manual: `user-profile` cannot currently clear `identity` back to `null` through the public tool schema.
-- Manual: screenshot `QuestionArtifact` exists as prompt contract/tests, but not yet as an enforced plugin/runtime schema boundary.
+- Manual: image-based `QuestionArtifact` exists as prompt contract/tests, but not yet as an enforced plugin/runtime schema boundary.
 - Advisory: several shared workflow rules are duplicated back into agent prompt files, which risks future drift from `.opencode/rules/`.
 
 ## Verification

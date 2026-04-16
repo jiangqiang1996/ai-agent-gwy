@@ -13,6 +13,7 @@ describe("coaching tools test baseline", () => {
     expect(Object.keys(tools).sort()).toEqual([
       "export-document",
       "grading",
+      "inline-html-resources",
       "question-generator",
       "user-profile",
     ])

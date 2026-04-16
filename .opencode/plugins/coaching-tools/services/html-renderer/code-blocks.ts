@@ -5,21 +5,28 @@ export function handleMermaid(text: string): string {
   return `<div class="mermaid-container"><pre class="mermaid">${escapeForHtml(text)}</pre></div>`
 }
 
-export function handleChart(text: string, index: number): { html: string; config: string | null } {
+export function handleMarkmap(rootJson: string, index: number): string {
+  return `<div class="markmap-container"><div class="markmap-host" id="markmap-${index}" data-markmap="${encodeURIComponent(rootJson)}"><svg></svg></div></div>`
+}
+
+export function handleChart(text: string, index: number): { html: string; accepted: boolean } {
   if (!text.trim()) {
-    return { html: `<div class="chart-container"><canvas id="chart-0" width="800" height="450"></canvas></div>`, config: null }
+    return {
+      html: '<pre class="chart-error">Chart.js 配置不能为空</pre>',
+      accepted: false,
+    }
   }
   try {
     JSON.parse(text)
-    const encoded = Buffer.from(text, "utf-8").toString("base64")
+    const encoded = encodeURIComponent(text)
     return {
       html: `<div class="chart-container"><canvas id="chart-${index}" width="800" height="450" data-chart="${encoded}"></canvas></div>`,
-      config: text,
+      accepted: true,
     }
   } catch {
     return {
       html: `<pre class="chart-error">无效的 Chart.js JSON 配置:\n${escapeForHtml(text)}</pre>`,
-      config: null,
+      accepted: false,
     }
   }
 }
@@ -56,21 +63,24 @@ const CANVAS_BLOCKED_PATTERNS = [
   "prototype[",
 ]
 
-export function handleCanvas(text: string, index: number): { html: string; script: string } {
+export function handleCanvas(text: string, index: number): { html: string; accepted: boolean } {
   if (!text.trim()) {
-    return { html: `<div class="canvas-container"><canvas id="canvas-${index}" width="800" height="450"></canvas></div>`, script: "" }
+    return {
+      html: '<pre class="chart-error">Canvas 代码不能为空</pre>',
+      accepted: false,
+    }
   }
   for (const pattern of CANVAS_BLOCKED_PATTERNS) {
     if (text.includes(pattern)) {
       return {
         html: `<pre class="chart-error">Canvas 代码包含禁止的 API 调用: ${escapeForHtml(pattern)}</pre>`,
-        script: "",
+        accepted: false,
       }
     }
   }
   return {
-    html: `<div class="canvas-container"><canvas id="canvas-${index}" width="800" height="450"></canvas></div>`,
-    script: `(function(){var canvas=document.getElementById("canvas-${index}");if(!canvas)return;canvas.width=canvas.parentElement.clientWidth||800;canvas.height=450;var ctx=canvas.getContext("2d");${text}})();`,
+    html: `<div class="canvas-container"><canvas id="canvas-${index}" width="800" height="450" data-canvas-script="${encodeURIComponent(text)}"></canvas></div>`,
+    accepted: true,
   }
 }
 

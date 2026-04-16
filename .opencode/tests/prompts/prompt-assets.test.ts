@@ -18,6 +18,18 @@ describe("prompt assets", () => {
     await expect(readPromptAsset("rules/prompt-authoring.md")).resolves.toContain("提示词编写规则")
   })
 
+  it("documents HTML export as validated reference-mode by default", async () => {
+    const workflow = await readPromptAsset("rules/export-workflow.md")
+    const exportHtml = await readPromptAsset("skills/export-html/SKILL.md")
+
+    expect(workflow).toContain("思维导图 / 知识图谱")
+    expect(workflow).toContain("验证引用优先")
+    expect(workflow).toContain("必须一起移动才有效")
+    expect(exportHtml).toContain("```markmap")
+    expect(exportHtml).toContain("同级资源目录")
+    expect(exportHtml).toContain("data-exam-question")
+  })
+
   it("removes duplicated exam-context blocks from specialist teacher prompts", async () => {
     const teacherFiles = [
       "agents/xingce-zong-teacher.md",
@@ -92,5 +104,105 @@ describe("prompt assets", () => {
   it("ships the new specialist teacher prompts", async () => {
     await expect(readPromptAsset("agents/xingce-kexue-teacher.md")).resolves.toContain("广东省考科学推理题型")
     await expect(readPromptAsset("agents/shenlun-zong-teacher.md")).resolves.toContain("申论总老师")
+  })
+
+  it("documents the scratchpad marker contract and inline-HTML separation in the export rule", async () => {
+    const workflow = await readPromptAsset("rules/export-workflow.md")
+    const exportHtml = await readPromptAsset("skills/export-html/SKILL.md")
+
+    expect(workflow).toContain("data-exam-question")
+    expect(workflow).toContain("内联已有 HTML 资源")
+    expect(workflow).toContain("inline-html")
+    expect(exportHtml).toContain("<section data-exam-question>")
+    expect(exportHtml).toContain("涂鸦板")
+  })
+
+  it("preserves the only-write-on-explicit-intent rule after contract migration", async () => {
+    const workflow = await readPromptAsset("rules/export-workflow.md")
+    const exportHtml = await readPromptAsset("skills/export-html/SKILL.md")
+    const exportMd = await readPromptAsset("skills/export-markdown/SKILL.md")
+
+    expect(workflow).toContain("只有在用户明确要求导出时才写文件")
+    expect(exportHtml).toContain("只有显式导出意图时才落文件")
+    expect(exportMd).toContain("只有显式导出意图时才落文件")
+  })
+
+  it("ships the inline-html skill with explicit intent guardrails", async () => {
+    const skill = await readPromptAsset("skills/inline-html/SKILL.md")
+
+    expect(skill).toContain("inline-html-resources")
+    expect(skill).toContain("仅在用户明确要求时触发")
+    expect(skill).toContain("不产生半成品文件")
+    expect(skill).toContain("原始 HTML 文件保持不变")
+  })
+
+  it("tool description matches the reference-mode default contract", async () => {
+    const { createExportDocumentTool } = await import("../../plugins/coaching-tools/tools/export-document.js")
+    const tool = createExportDocumentTool()
+    const desc = (tool as unknown as { description: string }).description
+
+    expect(desc).toContain("引用模式包")
+    expect(desc).toContain("验证")
+    expect(desc).toContain("同级资源目录")
+    expect(desc).toContain("不可达则导出失败")
+  })
+
+  it("tool description for inline-html-resources matches the explicit inline contract", async () => {
+    const { createInlineHtmlResourcesTool } = await import("../../plugins/coaching-tools/tools/inline-html-resources.js")
+    const tool = createInlineHtmlResourcesTool()
+    const desc = (tool as unknown as { description: string }).description
+
+    expect(desc).toContain("内联")
+    expect(desc).toContain("不产生半成品文件")
+    expect(desc).toContain("仅当用户明确要求")
+  })
+
+  it("export-html skill and export-workflow rule agree on the bundle contract", async () => {
+    const workflow = await readPromptAsset("rules/export-workflow.md")
+    const exportHtml = await readPromptAsset("skills/export-html/SKILL.md")
+
+    const sharedTerms = [
+      "同级资源目录",
+      "必须一起移动",
+      "data-exam-question",
+      "内联",
+    ]
+
+    for (const term of sharedTerms) {
+      expect(workflow).toContain(term)
+      expect(exportHtml).toContain(term)
+    }
+
+    expect(workflow).toContain("验证引用优先")
+    expect(exportHtml).toContain("引用")
+  })
+
+  it("documents measurable performance budgets in the export workflow", async () => {
+    const workflow = await readPromptAsset("rules/export-workflow.md")
+    const exportHtml = await readPromptAsset("skills/export-html/SKILL.md")
+
+    expect(workflow).toContain("性能预算")
+    expect(workflow).toContain("p50")
+    expect(workflow).toContain("p95")
+    expect(workflow).toContain("不会在单次导出中重复复制相同资源")
+
+    expect(exportHtml).toContain("性能预算")
+    expect(exportHtml).toContain("不会在单次导出中重复复制相同资源")
+  })
+
+  it("preserves the clear separation between default export and explicit inline", async () => {
+    const workflow = await readPromptAsset("rules/export-workflow.md")
+    const exportHtml = await readPromptAsset("skills/export-html/SKILL.md")
+    const inlineHtml = await readPromptAsset("skills/inline-html/SKILL.md")
+
+    expect(workflow).toContain("独立的工作流")
+    expect(workflow).toContain("inline-html")
+
+    expect(exportHtml).toContain("如需单文件离线包")
+    expect(exportHtml).toContain("内联 HTML 资源功能")
+
+    expect(inlineHtml).toContain("仅在用户明确要求时触发")
+    expect(inlineHtml).toContain("不要")
+    expect(inlineHtml).toContain("自动触发")
   })
 })

@@ -19,12 +19,12 @@ describe("question input workflow", () => {
     expect(content).toContain("确认门控")
   })
 
-  it("covers conversation text, external files, and screenshot input channels", async () => {
+  it("covers conversation text, external files, and image input channels", async () => {
     const content = await readPromptAsset("rules/question-input-workflow.md")
 
     expect(content).toContain("会话文本")
     expect(content).toContain("外部文件")
-    expect(content).toContain("截图")
+    expect(content).toContain("图片")
     expect(content).toContain("QuestionArtifact")
     expect(content).toContain("确认门控")
   })

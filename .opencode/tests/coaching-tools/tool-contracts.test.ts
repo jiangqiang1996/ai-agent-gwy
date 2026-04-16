@@ -1,3 +1,5 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { CoachingPlugin } from "../../plugins/coaching-tools.js"
@@ -381,5 +383,62 @@ describe("tool contracts", () => {
 
     expect(result).toContain("Error")
     expect(result).toContain("不存在")
+  })
+
+  const PNG_1PX = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO0p2iQAAAAASUVORK5CYII=",
+    "base64",
+  )
+
+  it("exposes the inline-html-resources tool through the plugin", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const inlineTool = plugin.tool?.["inline-html-resources"]
+
+    expect(inlineTool).toBeDefined()
+    expect(typeof inlineTool!.execute).toBe("function")
+  })
+
+  it("inlines resources from an existing HTML file through the public tool", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const inlineTool = plugin.tool?.["inline-html-resources"]
+
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
+    await mkdir(join(worktree, "assets"), { recursive: true })
+    await writeFile(join(worktree, "assets", "img.png"), PNG_1PX)
+
+    const imgPath = join(worktree, "assets", "img.png").replace(/\\/g, "/")
+    const html = `<!doctype html><html><body><img src="${imgPath}"></body></html>`
+    const htmlPath = join(outputDir, "inline-test.html")
+    await writeFile(htmlPath, html, "utf8")
+
+    const result = await inlineTool!.execute({
+      htmlFilePath: htmlPath,
+    }, { worktree, sessionID: "session-inline" } as never)
+
+    expect(result).toContain("内联完成")
+    expect(result).toContain("-inlined.html")
+  })
+
+  it("returns failure from inline-html-resources when a referenced file is missing", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const inlineTool = plugin.tool?.["inline-html-resources"]
+
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
+
+    const html = `<!doctype html><html><body><img src="missing.png"></body></html>`
+    const htmlPath = join(outputDir, "fail-inline.html")
+    await writeFile(htmlPath, html, "utf8")
+
+    const result = await inlineTool!.execute({
+      htmlFilePath: htmlPath,
+    }, { worktree, sessionID: "session-inline-fail" } as never)
+
+    expect(result).toContain("内联失败")
+    expect(result).toContain("资源验证失败")
   })
 })

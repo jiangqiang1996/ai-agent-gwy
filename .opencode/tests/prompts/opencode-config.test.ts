@@ -15,6 +15,7 @@ describe("opencode config compatibility", () => {
     expect(config.agent?.orchestrator?.tools?.["user-profile"]).toBe(true)
     expect(config.agent?.orchestrator?.tools?.["export-document"]).toBe(true)
     expect(config.agent?.orchestrator?.tools?.grading).toBe(true)
+    expect(config.agent?.orchestrator?.tools?.["inline-html-resources"]).toBe(true)
     expect(config.agent?.orchestrator?.tools?.["question-generator"]).toBe(true)
     expect(config.agent?.orchestrator?.tools?.timer).toBeUndefined()
     expect(config.agent?.orchestrator?.tools?.points).toBeUndefined()
@@ -27,5 +28,16 @@ describe("opencode config compatibility", () => {
     expect(config.agent?.["shenlun-zong-teacher"]).toBeDefined()
     expect(config.agent?.["guokao-champion"]).toBeUndefined()
     expect(config.agent?.["chongqing-champion"]).toBeUndefined()
+  })
+
+  it("orchestrator has both export-document and inline-html-resources tools", async () => {
+    const configPath = fileURLToPath(new URL("../../../opencode.json", import.meta.url))
+    const config = JSON.parse(await readFile(configPath, "utf8")) as {
+      agent?: Record<string, { tools?: Record<string, boolean> }>
+    }
+
+    const orchestratorTools = config.agent?.orchestrator?.tools ?? {}
+    expect(orchestratorTools["export-document"]).toBe(true)
+    expect(orchestratorTools["inline-html-resources"]).toBe(true)
   })
 })

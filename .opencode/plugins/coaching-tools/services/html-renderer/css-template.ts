@@ -30,6 +30,10 @@ body {
   min-height: 100vh;
 }
 
+body.no-toc main {
+  margin: 0 auto;
+}
+
 nav.toc {
   position: fixed;
   top: 0;
@@ -127,7 +131,7 @@ blockquote p:last-child { margin-bottom: 0; }
 
 hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
 
-img { max-width: 100%; border-radius: 8px; margin: 12px 0; }
+img { display: block; max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 12px; margin: 16px auto; border: 1px solid var(--border); background: linear-gradient(180deg, #fff, var(--bg-alt)); box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); }
 
 details { margin: 16px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 summary { padding: 12px 16px; background: var(--bg-alt); cursor: pointer; font-weight: 600; user-select: none; list-style: none; display: flex; align-items: center; gap: 8px; }
@@ -155,10 +159,14 @@ details > *:not(summary) { padding: 0 16px; }
 .chart-container canvas { width: 100% !important; height: auto !important; max-width: 800px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
 
 .svg-container { margin: 20px 0; text-align: center; }
-.svg-container svg { max-width: 100%; }
+.svg-container svg { max-width: 100%; height: auto; }
 
 .canvas-container { margin: 20px 0; text-align: center; }
 .canvas-container canvas { width: 100%; max-width: 800px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+
+.markmap-container { margin: 24px 0; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: radial-gradient(circle at top, #ffffff, #f8fafc 58%, #eef2ff 100%); box-shadow: 0 18px 40px rgba(79, 70, 229, 0.08); }
+.markmap-host { position: relative; min-height: 360px; }
+.markmap-host > svg { display: block; width: 100%; min-height: 360px; }
 
 pre.chart-error { background: #fef2f2; border: 1px solid #fecaca; color: var(--error); padding: 12px 16px; border-radius: 8px; font-family: var(--font-mono); font-size: 13px; }
 
@@ -184,5 +192,68 @@ pre.chart-error { background: #fef2f2; border: 1px solid #fecaca; color: var(--e
 @media print {
   nav.toc { display: none; }
   main { margin-left: 0; padding: 0; }
+}
+`.trim()
+
+export const SCRATCHPAD_CSS = `
+[data-exam-question] {
+  position: relative;
+}
+
+.scratchpad-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scratchpad-overlay.active {
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.scratchpad-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 11;
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.scratchpad-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  color: var(--text);
+  transition: background 0.15s;
+}
+
+.scratchpad-btn:hover {
+  background: var(--border-light);
+}
+
+.scratchpad-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.scratchpad-btn-danger:hover {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 `.trim()

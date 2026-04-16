@@ -7,6 +7,7 @@ describe("plugin registration", () => {
     expect(Object.keys(registerCoachingTools()).sort()).toEqual([
       "export-document",
       "grading",
+      "inline-html-resources",
       "question-generator",
       "user-profile",
     ])

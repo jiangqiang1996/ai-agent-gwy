@@ -1,9 +1,11 @@
 import { Marked } from "marked"
+import { Transformer } from "markmap-lib"
 import markedKatex from "marked-katex-extension"
 
-import { handleMermaid, handleChart, handleSvg, handleCanvas } from "./code-blocks.js"
-import { CSS_TEMPLATE } from "./css-template.js"
+import { handleMermaid, handleMarkmap, handleChart, handleSvg, handleCanvas } from "./code-blocks.js"
+import { CSS_TEMPLATE, SCRATCHPAD_CSS } from "./css-template.js"
 import { buildClientScripts } from "./client-scripts.js"
+import { buildRuntimeAssetRefs } from "./runtime-assets.js"
 
 export interface TocEntry {
   depth: number
@@ -14,13 +16,19 @@ export interface TocEntry {
 export interface MarkdownRenderResult {
   html: string
   toc: TocEntry[]
-  chartConfigs: (string | null)[]
-  canvasScripts: string[]
+  features: {
+    hasCanvas: boolean
+    hasCharts: boolean
+    hasKatex: boolean
+    hasMarkmap: boolean
+    hasMermaid: boolean
+    hasScratchpad: boolean
+  }
 }
 
-const KATEX_VERSION = "0.16.45"
-const MERMAID_VERSION = "11.6.0"
-const CHARTJS_VERSION = "4.4.9"
+export interface RenderMarkdownOptions {
+  worktree: string
+}
 
 function escapeHtml(text: string): string {
   return text
@@ -34,7 +42,13 @@ function escapeHtml(text: string): string {
 function textToId(text: string): string {
   return text
     .replace(/<[^>]+>/g, "")
+    .normalize("NFKC")
     .trim()
+    .replace(/[^\p{Letter}\p{Number}\p{Mark}\p{Script=Han}\s-]/gu, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    || "section"
 }
 
 function makeSlug(text: string, usedIds: Set<string>): string {
@@ -50,14 +64,44 @@ function makeSlug(text: string, usedIds: Set<string>): string {
   return slug
 }
 
-export function renderMarkdown(content: string): MarkdownRenderResult {
+function extractTokenText(tokens: unknown[]): string {
+  return tokens
+    .map((token) => {
+      if (typeof token !== "object" || token === null) return ""
+
+      if ("tokens" in token && Array.isArray((token as { tokens?: unknown[] }).tokens)) {
+        return extractTokenText((token as { tokens: unknown[] }).tokens)
+      }
+
+      if ("text" in token && typeof (token as { text?: unknown }).text === "string") {
+        return (token as { text: string }).text
+      }
+
+      if ("raw" in token && typeof (token as { raw?: unknown }).raw === "string") {
+        return (token as { raw: string }).raw
+      }
+
+      return ""
+    })
+    .join("")
+}
+
+export async function renderMarkdown(content: string, options: RenderMarkdownOptions): Promise<MarkdownRenderResult> {
   const toc: TocEntry[] = []
-  const chartConfigs: (string | null)[] = []
-  const canvasScripts: string[] = []
   const usedIds = new Set<string>()
+  const features = {
+    hasCanvas: false,
+    hasCharts: false,
+    hasKatex: false,
+    hasMarkmap: false,
+    hasMermaid: false,
+    hasScratchpad: false,
+  }
 
   let chartIndex = 0
   let canvasIndex = 0
+  let markmapIndex = 0
+  let markmapTransformer: Transformer | null = null
 
   const marked = new Marked(
     markedKatex({ throwOnError: false }),
@@ -70,56 +114,68 @@ export function renderMarkdown(content: string): MarkdownRenderResult {
   marked.use({
     renderer: {
       code({ text, lang }: { text: string; lang?: string }): string | false {
-        switch (lang) {
+        switch (lang?.toLowerCase()) {
           case "mermaid":
+            features.hasMermaid = true
             return handleMermaid(text)
+          case "markmap":
+          case "mindmap": {
+            try {
+              markmapTransformer ||= new Transformer()
+              const root = markmapTransformer.transform(text).root
+              const html = handleMarkmap(JSON.stringify(root), markmapIndex)
+              markmapIndex++
+              features.hasMarkmap = true
+              return html
+            } catch {
+              return `<pre class="chart-error">无效的 Markmap / Mindmap 内容:\n${escapeHtml(text)}</pre>`
+            }
+          }
           case "chart": {
             const result = handleChart(text, chartIndex)
-            chartConfigs.push(result.config)
-            if (result.config !== null) chartIndex++
+            if (result.accepted) {
+              chartIndex++
+              features.hasCharts = true
+            }
             return result.html
           }
           case "svg":
             return handleSvg(text)
           case "canvas": {
             const result = handleCanvas(text, canvasIndex)
-            canvasScripts.push(result.script)
-            if (result.script) canvasIndex++
+            if (result.accepted) {
+              canvasIndex++
+              features.hasCanvas = true
+            }
             return result.html
           }
           default:
             return false
         }
       },
-      heading({ tokens, depth }: { tokens: unknown[]; depth: number }): string {
-        const text = (tokens || [])
-          .map((t: unknown) =>
-            typeof t === "object" && t !== null && "text" in t
-              ? (t as { text: string }).text
-              : typeof t === "object" && t !== null && "raw" in t
-                ? (t as { raw: string }).raw
-                : String(t),
-          )
-          .join("")
+      heading(this: { parser: { parseInline(tokens: unknown[]): string } }, { tokens, depth }: { tokens: unknown[]; depth: number }): string {
+        const text = extractTokenText(tokens || [])
         const id = makeSlug(text, usedIds)
         toc.push({ depth, text, id })
-        return `<h${depth} id="${escapeHtml(id)}">${(tokens as unknown[]).map(() => "").join("")}${escapeHtml(text)}</h${depth}>\n`
+        return `<h${depth} id="${escapeHtml(id)}">${this.parser.parseInline(tokens)}</h${depth}>\n`
       },
     },
     walkTokens(token) {
-      // walkTokens is used above via heading renderer; this hook is for any additional token walking
       void token
     },
   })
 
   const html = marked.parse(content) as string
+  features.hasKatex = html.includes("class=\"katex")
+  features.hasScratchpad = html.includes("data-exam-question")
 
-  return { html, toc, chartConfigs, canvasScripts }
+  return { html, toc, features }
 }
 
-export function buildHtmlDocument(title: string, result: MarkdownRenderResult): string {
+export function buildHtmlDocument(title: string, result: MarkdownRenderResult, assetRelDir: string): string {
   const escapedTitle = escapeHtml(title)
-  const { html, toc, chartConfigs, canvasScripts } = result
+  const { html, toc, features } = result
+  const bodyClass = toc.length >= 2 ? "has-toc" : "no-toc"
 
   const tocHtml =
     toc.length >= 2
@@ -131,7 +187,9 @@ export function buildHtmlDocument(title: string, result: MarkdownRenderResult): 
           .join("")}</ul></nav>`
       : ""
 
-  const clientScript = buildClientScripts({ chartConfigs, canvasScripts })
+  const runtimeAssets = buildRuntimeAssetRefs(features, assetRelDir)
+  const clientScript = buildClientScripts(features)
+  const fullCss = features.hasScratchpad ? CSS_TEMPLATE + "\n" + SCRATCHPAD_CSS : CSS_TEMPLATE
 
   return `<!doctype html>
 <html lang="zh-CN">
@@ -139,14 +197,13 @@ export function buildHtmlDocument(title: string, result: MarkdownRenderResult): 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapedTitle}</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@${KATEX_VERSION}/dist/katex.min.css" />
-  <script defer src="https://cdn.jsdelivr.net/npm/mermaid@${MERMAID_VERSION}/dist/mermaid.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@${CHARTJS_VERSION}/dist/chart.umd.min.js"></script>
-  <style>${CSS_TEMPLATE}</style>
+  ${runtimeAssets.styles}
+  <style>${fullCss}</style>
 </head>
-<body>
+<body class="${bodyClass}">
   ${tocHtml}
   <main><article>${html}</article></main>
+  ${runtimeAssets.scripts}
   ${clientScript}
 </body>
 </html>`
