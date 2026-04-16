@@ -12,7 +12,7 @@
 
 ## 预览效果
 
-<img alt="sample\preview\img.png" src="sample\preview\img.png"/>
+![](sample/preview/img.png)
 
 ## 快速开始（安装与使用指南）
 
