@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { exportDocument } from "../../plugins/coaching-tools/services/export-service.js"
+import { renderToHtmlBundle } from "../../plugins/coaching-tools/services/html-pipeline.js"
 import { cleanupTempWorktree, createTempWorktree } from "../setup/temp-worktree.js"
 
 const worktrees: string[] = []
@@ -20,12 +21,11 @@ async function withWorktree(): Promise<string> {
   return worktree
 }
 
-describe("export service", () => {
+describe("export service (markdown)", () => {
   it("writes markdown output under output/ with a safe relative path", async () => {
     const worktree = await withWorktree()
 
     const result = await exportDocument(worktree, {
-      format: "markdown",
       title: "知识点总结",
       content: "# 标题\n\n内容",
     })
@@ -35,26 +35,10 @@ describe("export service", () => {
     expect(result.assetDir).toBeUndefined()
   })
 
-  it("wraps html output in a static document shell", async () => {
-    const worktree = await withWorktree()
-
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "复杂排版题面",
-      content: "第一段\n第二段",
-    })
-
-    const html = await readFile(result.absolutePath, "utf8")
-    expect(result.relativePath.endsWith(".html")).toBe(true)
-    expect(html).toContain("<!doctype html>")
-    expect(html).toContain("复杂排版题面")
-  })
-
   it("falls back to a safe filename when the title is empty", async () => {
     const worktree = await withWorktree()
 
     const result = await exportDocument(worktree, {
-      format: "markdown",
       title: "   ",
       content: "content",
     })
@@ -66,12 +50,10 @@ describe("export service", () => {
     const worktree = await withWorktree()
 
     const first = await exportDocument(worktree, {
-      format: "markdown",
       title: "同名文档",
       content: "first",
     })
     const second = await exportDocument(worktree, {
-      format: "markdown",
       title: "同名文档",
       content: "second",
     })
@@ -83,7 +65,6 @@ describe("export service", () => {
     const worktree = await withWorktree()
 
     await expect(exportDocument(worktree, {
-      format: "markdown",
       title: "空内容",
       content: "   ",
     })).rejects.toThrow("导出内容不能为空")
@@ -93,26 +74,51 @@ describe("export service", () => {
     const worktree = await withWorktree()
 
     await expect(exportDocument(worktree, {
-      format: "markdown",
       title: "../escape",
       content: "content",
     })).rejects.toThrow("路径分隔符")
 
     await expect(exportDocument(worktree, {
-      format: "markdown",
       title: "CON",
       content: "content",
     })).rejects.toThrow("系统保留名称")
   })
 
-  it("renders markdown headings as HTML with IDs", async () => {
+  it("markdown export does not trigger HTML asset validation", async () => {
     const worktree = await withWorktree()
 
     const result = await exportDocument(worktree, {
-      format: "html",
-      title: "标题测试",
-      content: "## 数量关系\n\n### 基础题型",
+      title: "MD无验证",
+      content: "![不存在](no-such-file.png)\n\n$E=mc^2$\n\n```mermaid\ngraph TD\n  A-->B\n```",
     })
+
+    expect(result.relativePath.endsWith(".md")).toBe(true)
+    expect(result.assetDir).toBeUndefined()
+    const content = await readFile(result.absolutePath, "utf8")
+    expect(content).toContain("![不存在](no-such-file.png)")
+  })
+})
+
+describe("html pipeline (renderToHtmlBundle)", () => {
+  it("wraps html output in a static document shell", async () => {
+    const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
+
+    const result = await renderToHtmlBundle(worktree, outputDir, "第一段\n第二段", "复杂排版题面")
+
+    const html = await readFile(result.absolutePath, "utf8")
+    expect(result.relativePath.endsWith(".html")).toBe(true)
+    expect(html).toContain("<!doctype html>")
+    expect(html).toContain("复杂排版题面")
+  })
+
+  it("renders markdown headings as HTML with IDs", async () => {
+    const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
+
+    const result = await renderToHtmlBundle(worktree, outputDir, "## 数量关系\n\n### 基础题型", "标题测试")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain('<h2 id="数量关系">')
@@ -121,12 +127,10 @@ describe("export service", () => {
 
   it("generates TOC from headings", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "TOC测试",
-      content: "## 第一节\n\n### 小节A\n\n## 第二节",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "## 第一节\n\n### 小节A\n\n## 第二节", "TOC测试")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain('<nav class="toc">')
@@ -136,12 +140,10 @@ describe("export service", () => {
 
   it("renders mermaid code block as mermaid container", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "Mermaid测试",
-      content: "```mermaid\ngraph TD\n    A-->B\n```",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "```mermaid\ngraph TD\n    A-->B\n```", "Mermaid测试")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain('<pre class="mermaid">')
@@ -149,12 +151,10 @@ describe("export service", () => {
 
   it("renders chart code block as canvas element", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "Chart测试",
-      content: '```chart\n{"type":"bar","data":{"labels":["A"],"datasets":[{"label":"X","data":[1]}]}}\n```',
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, '```chart\n{"type":"bar","data":{"labels":["A"],"datasets":[{"label":"X","data":[1]}]}}\n```', "Chart测试")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain('<canvas id="chart-0"')
@@ -169,12 +169,10 @@ describe("export service", () => {
 
     await mkdir(join(worktree, "fixtures"), { recursive: true })
     await writeFile(join(worktree, "fixtures", "question.png"), pngBytes)
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "题图测试",
-      content: "![题图](fixtures/question.png)",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "![题图](fixtures/question.png)", "题图测试")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).not.toContain("data:image/png;base64,")
@@ -193,12 +191,10 @@ describe("export service", () => {
 
   it("renders markmap blocks for knowledge maps", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "图谱测试",
-      content: "```markmap\n# 判断推理\n## 图形推理\n## 逻辑判断\n```",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "```markmap\n# 判断推理\n## 图形推理\n## 逻辑判断\n```", "图谱测试")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain('class="markmap-container"')
@@ -208,12 +204,10 @@ describe("export service", () => {
 
   it("preserves KaTeX formula in HTML output", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "公式测试",
-      content: "公式 $E=mc^2$ 测试",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "公式 $E=mc^2$ 测试", "公式测试")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain("katex")
@@ -221,12 +215,10 @@ describe("export service", () => {
 
   it("preserves HTML passthrough elements (details)", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "HTML透传",
-      content: "<details>\n<summary>题目</summary>\n\n答案\n\n</details>",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "<details>\n<summary>题目</summary>\n\n答案\n\n</details>", "HTML透传")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain("<details>")
@@ -235,12 +227,10 @@ describe("export service", () => {
 
   it("keeps canvas payload encoded out of inline script context", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "Canvas安全",
-      content: "```canvas\nctx.fillRect(10,10,50,50); //</script><script>alert(1)</script>\n```",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "```canvas\nctx.fillRect(10,10,50,50); //</script><script>alert(1)</script>\n```", "Canvas安全")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain("data-canvas-script=")
@@ -249,30 +239,28 @@ describe("export service", () => {
 
   it("references runtime assets from sibling asset directory instead of inlining", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "离线资源",
-      content: [
-        "## 图表与图谱",
-        "",
-        "公式 $E=mc^2$",
-        "",
-        "```mermaid",
-        "graph TD",
-        "  A --> B",
-        "```",
-        "",
-        "```chart",
-        '{"type":"bar","data":{"labels":["A"],"datasets":[{"label":"X","data":[1]}]}}',
-        "```",
-        "",
-        "```markmap",
-        "# 行测",
-        "## 判断推理",
-        "```",
-      ].join("\n"),
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, [
+      "## 图表与图谱",
+      "",
+      "公式 $E=mc^2$",
+      "",
+      "```mermaid",
+      "graph TD",
+      "  A --> B",
+      "```",
+      "",
+      "```chart",
+      '{"type":"bar","data":{"labels":["A"],"datasets":[{"label":"X","data":[1]}]}}',
+      "```",
+      "",
+      "```markmap",
+      "# 行测",
+      "## 判断推理",
+      "```",
+    ].join("\n"), "离线资源")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).not.toContain('src="https://')
@@ -292,16 +280,13 @@ describe("export service", () => {
 
   it("refuses to write HTML when a referenced local image is missing", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
     await expect(
-      exportDocument(worktree, {
-        format: "html",
-        title: "缺失资源",
-        content: "![缺失图片](nonexistent-image.png)",
-      }),
+      renderToHtmlBundle(worktree, outputDir, "![缺失图片](nonexistent-image.png)", "缺失资源"),
     ).rejects.toThrow("资源验证失败")
 
-    const outputDir = join(worktree, "output")
     let hasHtmlFiles = false
     try {
       const dir = await stat(outputDir)
@@ -322,12 +307,10 @@ describe("export service", () => {
     )
     await mkdir(join(worktree, "img"), { recursive: true })
     await writeFile(join(worktree, "img", "diagram.png"), pngBytes)
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "Bundle测试",
-      content: "## 带 Mermaid 和图片\n\n```mermaid\ngraph TD\n  A-->B\n```\n\n![图](img/diagram.png)",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "## 带 Mermaid 和图片\n\n```mermaid\ngraph TD\n  A-->B\n```\n\n![图](img/diagram.png)", "Bundle测试")
 
     expect(result.assetDir).toBeDefined()
     const htmlStat = await stat(result.absolutePath)
@@ -353,12 +336,10 @@ describe("export service", () => {
 
   it("skips asset directory when no runtime features or local images are needed", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "纯文本",
-      content: "这是一段纯文本内容，没有图表、公式或图片。",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "这是一段纯文本内容，没有图表、公式或图片。", "纯文本")
 
     expect(result.assetDir).toBeUndefined()
     const html = await readFile(result.absolutePath, "utf8")
@@ -376,12 +357,10 @@ describe("export service", () => {
     await mkdir(join(worktree, "pics"), { recursive: true })
     await writeFile(join(worktree, "pics", "a.png"), pngBytes)
     await writeFile(join(worktree, "pics", "b.png"), pngBytes)
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "无内联",
-      content: "![a](pics/a.png)\n\n![b](pics/b.png)",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "![a](pics/a.png)\n\n![b](pics/b.png)", "无内联")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).not.toMatch(/src="data:/)
@@ -394,11 +373,7 @@ describe("export service", () => {
     await mkdir(outputDir, { recursive: true })
 
     await expect(
-      exportDocument(worktree, {
-        format: "html",
-        title: "失败清理",
-        content: "![不存在](no-such-file.png)",
-      }),
+      renderToHtmlBundle(worktree, outputDir, "![不存在](no-such-file.png)", "失败清理"),
     ).rejects.toThrow("资源验证失败")
 
     const files = await readdir(outputDir)
@@ -408,34 +383,13 @@ describe("export service", () => {
     expect(assetDirs.length).toBe(0)
   })
 
-  it("markdown export does not trigger HTML asset validation", async () => {
-    const worktree = await withWorktree()
-
-    const result = await exportDocument(worktree, {
-      format: "markdown",
-      title: "MD无验证",
-      content: "![不存在](no-such-file.png)\n\n$E=mc^2$\n\n```mermaid\ngraph TD\n  A-->B\n```",
-    })
-
-    expect(result.relativePath.endsWith(".md")).toBe(true)
-    expect(result.assetDir).toBeUndefined()
-    const content = await readFile(result.absolutePath, "utf8")
-    expect(content).toContain("![不存在](no-such-file.png)")
-  })
-
   it("repeated exports maintain consistent html plus asset dir contract", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const first = await exportDocument(worktree, {
-      format: "html",
-      title: "重复导出",
-      content: "```mermaid\ngraph TD\n  A-->B\n```",
-    })
-    const second = await exportDocument(worktree, {
-      format: "html",
-      title: "重复导出",
-      content: "```mermaid\ngraph TD\n  C-->D\n```",
-    })
+    const first = await renderToHtmlBundle(worktree, outputDir, "```mermaid\ngraph TD\n  A-->B\n```", "重复导出")
+    const second = await renderToHtmlBundle(worktree, outputDir, "```mermaid\ngraph TD\n  C-->D\n```", "重复导出")
 
     for (const result of [first, second]) {
       expect(result.assetDir).toBeDefined()
@@ -450,12 +404,10 @@ describe("export service", () => {
 
   it("includes scratchpad hooks when data-exam-question markers exist", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "涂鸦集成",
-      content: "<section data-exam-question>\n**题目：** 测试\n\nA. 选项一\nB. 选项二\n</section>",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "<section data-exam-question>\n**题目：** 测试\n\nA. 选项一\nB. 选项二\n</section>", "涂鸦集成")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain("scratchpad-overlay")
@@ -465,12 +417,10 @@ describe("export service", () => {
 
   it("omits scratchpad hooks when no markers exist", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "无涂鸦集成",
-      content: "## 标题\n\n普通段落内容",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "## 标题\n\n普通段落内容", "无涂鸦集成")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).not.toContain("scratchpad")
@@ -478,12 +428,10 @@ describe("export service", () => {
 
   it("omits scratchpad CSS and JS for documents without data-exam-question markers", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "无涂鸦资源",
-      content: "## 数量关系\n\n### 基础题型\n\n公式 $E=mc^2$\n\n```mermaid\ngraph TD\n  A-->B\n```",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "## 数量关系\n\n### 基础题型\n\n公式 $E=mc^2$\n\n```mermaid\ngraph TD\n  A-->B\n```", "无涂鸦资源")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).not.toContain("scratchpad-overlay")
@@ -508,18 +456,16 @@ describe("export service", () => {
     )
     await mkdir(join(worktree, "shared"), { recursive: true })
     await writeFile(join(worktree, "shared", "icon.png"), pngBytes)
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "去重测试",
-      content: [
-        "![图标](shared/icon.png)",
-        "",
-        "段落中间再次引用:",
-        "",
-        "![同一个图标](shared/icon.png)",
-      ].join("\n"),
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, [
+      "![图标](shared/icon.png)",
+      "",
+      "段落中间再次引用:",
+      "",
+      "![同一个图标](shared/icon.png)",
+    ].join("\n"), "去重测试")
 
     expect(result.assetDir).toBeDefined()
     const contentDir = join(result.assetDir!.absolutePath, "content")
@@ -543,23 +489,21 @@ describe("export service", () => {
     )
     await mkdir(join(worktree, "assets"), { recursive: true })
     await writeFile(join(worktree, "assets", "photo.png"), pngBytes)
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "E2E冒烟",
-      content: [
-        "## 综合测试",
-        "",
-        "公式 $x^2 + y^2 = r^2$",
-        "",
-        "```mermaid",
-        "graph TD",
-        "  X-->Y",
-        "```",
-        "",
-        "![照片](assets/photo.png)",
-      ].join("\n"),
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, [
+      "## 综合测试",
+      "",
+      "公式 $x^2 + y^2 = r^2$",
+      "",
+      "```mermaid",
+      "graph TD",
+      "  X-->Y",
+      "```",
+      "",
+      "![照片](assets/photo.png)",
+    ].join("\n"), "E2E冒烟")
 
     expect(result.relativePath.startsWith("output/")).toBe(true)
     expect(result.relativePath.endsWith(".html")).toBe(true)
@@ -596,12 +540,10 @@ describe("export service", () => {
 
   it("plain text export produces no asset directory and no runtime references", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "纯文字",
-      content: "普通段落文字，无图表无公式无图片。",
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, "普通段落文字，无图表无公式无图片。", "纯文字")
 
     expect(result.assetDir).toBeUndefined()
 
@@ -611,7 +553,6 @@ describe("export service", () => {
     expect(html).not.toContain("data:")
     expect(html).not.toContain("scratchpad")
 
-    const outputDir = join(worktree, "output")
     const outputEntries = await readdir(outputDir)
     const assetDirs = outputEntries.filter((e) => e.includes("-assets"))
     expect(assetDirs.length).toBe(0)
@@ -619,30 +560,28 @@ describe("export service", () => {
 
   it("HTML runtime references resolve to actual files on disk", async () => {
     const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "运行时路径一致性",
-      content: [
-        "## 综合",
-        "",
-        "公式 $E=mc^2$",
-        "",
-        "```mermaid",
-        "graph TD",
-        "  A-->B",
-        "```",
-        "",
-        "```chart",
-        '{"type":"bar","data":{"labels":["A"],"datasets":[{"label":"X","data":[1]}]}}',
-        "```",
-        "",
-        "```markmap",
-        "# 行测",
-        "## 言语",
-        "```",
-      ].join("\n"),
-    })
+    const result = await renderToHtmlBundle(worktree, outputDir, [
+      "## 综合",
+      "",
+      "公式 $E=mc^2$",
+      "",
+      "```mermaid",
+      "graph TD",
+      "  A-->B",
+      "```",
+      "",
+      "```chart",
+      '{"type":"bar","data":{"labels":["A"],"datasets":[{"label":"X","data":[1]}]}}',
+      "```",
+      "",
+      "```markmap",
+      "# 行测",
+      "## 言语",
+      "```",
+    ].join("\n"), "运行时路径一致性")
 
     expect(result.assetDir).toBeDefined()
     const html = await readFile(result.absolutePath, "utf8")
@@ -663,5 +602,15 @@ describe("export service", () => {
       const fileStat = await stat(absPath)
       expect(fileStat.isFile()).toBe(true)
     }
+  })
+
+  it("rejects empty content", async () => {
+    const worktree = await withWorktree()
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
+
+    await expect(
+      renderToHtmlBundle(worktree, outputDir, "   ", "空内容"),
+    ).rejects.toThrow("导出内容不能为空")
   })
 })

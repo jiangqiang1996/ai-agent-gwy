@@ -1,3 +1,4 @@
+import { createConvertMdToHtmlTool } from "./tools/convert-md-to-html.js"
 import { createExportDocumentTool } from "./tools/export-document.js"
 import { createGradingTool } from "./tools/grading.js"
 import { createInlineHtmlResourcesTool } from "./tools/inline-html-resources.js"
@@ -10,6 +11,7 @@ export function registerCoachingTools() {
     grading: createGradingTool(),
     "question-generator": createQuestionGeneratorTool(),
     "export-document": createExportDocumentTool(),
+    "convert-md-to-html": createConvertMdToHtmlTool(),
     "inline-html-resources": createInlineHtmlResourcesTool(),
   }
 }

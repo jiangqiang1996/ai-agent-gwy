@@ -1,6 +1,9 @@
+import { mkdir } from "node:fs/promises"
+import { join } from "node:path"
 import { readFile } from "node:fs/promises"
 import { afterEach, describe, expect, it } from "vitest"
 
+import { renderToHtmlBundle } from "../../plugins/coaching-tools/services/html-pipeline.js"
 import { exportDocument } from "../../plugins/coaching-tools/services/export-service.js"
 import { cleanupTempWorktree, createTempWorktree } from "../setup/temp-worktree.js"
 
@@ -19,15 +22,17 @@ async function withWorktree(): Promise<string> {
   return worktree
 }
 
+async function renderToHtml(worktree: string, content: string, title: string) {
+  const outputDir = join(worktree, "output")
+  await mkdir(outputDir, { recursive: true })
+  return renderToHtmlBundle(worktree, outputDir, content, title)
+}
+
 describe("scratchpad", () => {
   it("includes scratchpad CSS and JS when data-exam-question markers present", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "涂鸦测试",
-      content: "<section data-exam-question>\n**题目：** 测试\n\nA. 选项一\nB. 选项二\n</section>",
-    })
+    const result = await renderToHtml(worktree, "<section data-exam-question>\n**题目：** 测试\n\nA. 选项一\nB. 选项二\n</section>", "涂鸦测试")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain("scratchpad-overlay")
@@ -42,19 +47,15 @@ describe("scratchpad", () => {
   it("supports multiple independent question regions", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "多题涂鸦",
-      content: [
-        "<section data-exam-question>",
-        "题目一",
-        "</section>",
-        "",
-        "<section data-exam-question>",
-        "题目二",
-        "</section>",
-      ].join("\n"),
-    })
+    const result = await renderToHtml(worktree, [
+      "<section data-exam-question>",
+      "题目一",
+      "</section>",
+      "",
+      "<section data-exam-question>",
+      "题目二",
+      "</section>",
+    ].join("\n"), "多题涂鸦")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain("scratchpad-overlay")
@@ -66,11 +67,7 @@ describe("scratchpad", () => {
   it("does not include scratchpad when no markers present", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "无涂鸦",
-      content: "普通内容，没有题目区域标记",
-    })
+    const result = await renderToHtml(worktree, "普通内容，没有题目区域标记", "无涂鸦")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).not.toContain("scratchpad-overlay")
@@ -82,16 +79,12 @@ describe("scratchpad", () => {
   it("resolves nested markers to one overlay per top-level region", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "嵌套标记",
-      content: [
-        "<section data-exam-question>",
-        "外层题目",
-        "<div data-exam-question>内层内容</div>",
-        "</section>",
-      ].join("\n"),
-    })
+    const result = await renderToHtml(worktree, [
+      "<section data-exam-question>",
+      "外层题目",
+      "<div data-exam-question>内层内容</div>",
+      "</section>",
+    ].join("\n"), "嵌套标记")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain("scratchpad-overlay")
@@ -106,11 +99,7 @@ describe("scratchpad", () => {
   it("wraps each region init in try-catch for error isolation", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "错误隔离",
-      content: "<section data-exam-question>\n题目\n</section>",
-    })
+    const result = await renderToHtml(worktree, "<section data-exam-question>\n题目\n</section>", "错误隔离")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain("scratchpad-overlay")
@@ -123,11 +112,7 @@ describe("scratchpad", () => {
   it("does not use browser storage APIs in scratchpad script", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "无持久化",
-      content: "<section data-exam-question>\n题目\n</section>",
-    })
+    const result = await renderToHtml(worktree, "<section data-exam-question>\n题目\n</section>", "无持久化")
 
     const html = await readFile(result.absolutePath, "utf8")
     const scriptMatches = html.match(/<script>[\s\S]*?<\/script>/g)
@@ -143,22 +128,18 @@ describe("scratchpad", () => {
   it("coexists with mermaid, charts, and markmap in marked regions", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "混合功能",
-      content: [
-        "<section data-exam-question>",
-        "",
-        "```mermaid",
-        "graph TD",
-        "  A-->B",
-        "```",
-        "",
-        '```chart\n{"type":"bar","data":{"labels":["A"],"datasets":[{"label":"X","data":[1]}]}}\n```',
-        "",
-        "</section>",
-      ].join("\n"),
-    })
+    const result = await renderToHtml(worktree, [
+      "<section data-exam-question>",
+      "",
+      "```mermaid",
+      "graph TD",
+      "  A-->B",
+      "```",
+      "",
+      '```chart\n{"type":"bar","data":{"labels":["A"],"datasets":[{"label":"X","data":[1]}]}}\n```',
+      "",
+      "</section>",
+    ].join("\n"), "混合功能")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain("scratchpad-overlay")
@@ -169,11 +150,7 @@ describe("scratchpad", () => {
   it("works with div data-exam-question markers", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "DIV标记",
-      content: "<div data-exam-question>\n**题目**\n</div>",
-    })
+    const result = await renderToHtml(worktree, "<div data-exam-question>\n**题目**\n</div>", "DIV标记")
 
     const html = await readFile(result.absolutePath, "utf8")
     expect(html).toContain("scratchpad-overlay")
@@ -183,11 +160,7 @@ describe("scratchpad", () => {
   it("does not include scratchpad CSS in style tag when no markers present", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "纯文本无涂鸦",
-      content: "## 标题\n\n普通段落",
-    })
+    const result = await renderToHtml(worktree, "## 标题\n\n普通段落", "纯文本无涂鸦")
 
     const html = await readFile(result.absolutePath, "utf8")
     const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/)
@@ -199,11 +172,7 @@ describe("scratchpad", () => {
   it("includes scratchpad CSS in style tag when markers present", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "CSS验证",
-      content: "<section data-exam-question>\n题目\n</section>",
-    })
+    const result = await renderToHtml(worktree, "<section data-exam-question>\n题目\n</section>", "CSS验证")
 
     const html = await readFile(result.absolutePath, "utf8")
     const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/)
@@ -217,11 +186,7 @@ describe("scratchpad", () => {
   it("overlay canvas has pointer-events none when inactive", async () => {
     const worktree = await withWorktree()
 
-    const result = await exportDocument(worktree, {
-      format: "html",
-      title: "交互隔离",
-      content: "<section data-exam-question>\n题目\n</section>",
-    })
+    const result = await renderToHtml(worktree, "<section data-exam-question>\n题目\n</section>", "交互隔离")
 
     const html = await readFile(result.absolutePath, "utf8")
     const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/)
@@ -235,7 +200,6 @@ describe("scratchpad", () => {
     const worktree = await withWorktree()
 
     const result = await exportDocument(worktree, {
-      format: "markdown",
       title: "MD涂鸦",
       content: "<section data-exam-question>\n题目\n</section>",
     })

@@ -55,7 +55,6 @@ describe("end-to-end smoke", () => {
     }, { worktree, sessionID: "session-smoke" } as never)
 
     const exported = await exportTool!.execute({
-      format: "markdown",
       title: "判断推理总结",
       content: "知识点总结\n\n经典例题",
     }, { worktree, sessionID: "session-smoke" } as never)

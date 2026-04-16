@@ -11,6 +11,7 @@ describe("coaching tools test baseline", () => {
     const tools = plugin.tool ?? {}
 
     expect(Object.keys(tools).sort()).toEqual([
+      "convert-md-to-html",
       "export-document",
       "grading",
       "inline-html-resources",

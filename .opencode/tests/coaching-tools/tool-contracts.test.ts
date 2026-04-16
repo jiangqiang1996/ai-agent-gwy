@@ -205,12 +205,34 @@ describe("tool contracts", () => {
     const exportTool = plugin.tool?.["export-document"]
 
     const result = await exportTool!.execute({
-      format: "markdown",
       title: "当前会话总结",
       content: "这是导出内容",
     }, { worktree, sessionID: "session-2" } as never)
 
     expect(result).toContain("已导出到 output/")
+  })
+
+  it("converts an existing .md file to HTML through the convert-md-to-html tool", async () => {
+    const worktree = await withWorktree()
+    const plugin = await CoachingPlugin({} as never)
+    const exportTool = plugin.tool?.["export-document"]
+    const convertTool = plugin.tool?.["convert-md-to-html"]
+
+    const mdResult = await exportTool!.execute({
+      title: "转换测试",
+      content: "## 标题\n\n公式 $E=mc^2$\n\n```mermaid\ngraph TD\n  A-->B\n```",
+    }, { worktree, sessionID: "session-conv" } as never)
+
+    expect(mdResult).toContain("已导出到 output/")
+    const mdPath = mdResult.match(/已导出到 (output\/[^\s]+)/)?.[1]
+    expect(mdPath).toBeDefined()
+
+    const htmlResult = await convertTool!.execute({
+      mdFilePath: mdPath!,
+    }, { worktree, sessionID: "session-conv" } as never)
+
+    expect(htmlResult).toContain("转换完成")
+    expect(htmlResult).toMatch(/\.html/)
   })
 
   it("routes profile rename through the durable identity index", async () => {

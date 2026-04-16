@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest"
 
 import { inlineHtmlResources } from "../../plugins/coaching-tools/services/inline-html-resources-service.js"
 import { exportDocument } from "../../plugins/coaching-tools/services/export-service.js"
+import { renderToHtmlBundle } from "../../plugins/coaching-tools/services/html-pipeline.js"
 import { cleanupTempWorktree, createTempWorktree } from "../setup/temp-worktree.js"
 
 const worktrees: string[] = []
@@ -182,12 +183,20 @@ describe("inline-html-resources service", () => {
     const worktree = await withWorktree()
     await mkdir(join(worktree, "pics"), { recursive: true })
     await writeFile(join(worktree, "pics", "diagram.png"), PNG_1PX)
+    const outputDir = join(worktree, "output")
+    await mkdir(outputDir, { recursive: true })
 
-    const exportResult = await exportDocument(worktree, {
-      format: "html",
+    const mdResult = await exportDocument(worktree, {
       title: "内联E2E",
       content: "## 测试\n\n![图](pics/diagram.png)",
     })
+
+    const exportResult = await renderToHtmlBundle(
+      worktree,
+      outputDir,
+      await readFile(mdResult.absolutePath, "utf8"),
+      "内联E2E",
+    )
 
     expect(exportResult.assetDir).toBeDefined()
 

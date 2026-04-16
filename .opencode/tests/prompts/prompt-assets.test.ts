@@ -18,16 +18,18 @@ describe("prompt assets", () => {
     await expect(readPromptAsset("rules/prompt-authoring.md")).resolves.toContain("提示词编写规则")
   })
 
-  it("documents HTML export as validated reference-mode by default", async () => {
+  it("documents HTML conversion as validated reference-mode by default", async () => {
     const workflow = await readPromptAsset("rules/export-workflow.md")
     const exportHtml = await readPromptAsset("skills/export-html/SKILL.md")
 
     expect(workflow).toContain("思维导图 / 知识图谱")
     expect(workflow).toContain("验证引用优先")
     expect(workflow).toContain("必须一起移动才有效")
+    expect(workflow).toContain("所有导出一律先写 .md 文件")
     expect(exportHtml).toContain("```markmap")
     expect(exportHtml).toContain("同级资源目录")
     expect(exportHtml).toContain("data-exam-question")
+    expect(exportHtml).toContain("convert-md-to-html")
   })
 
   it("removes duplicated exam-context blocks from specialist teacher prompts", async () => {
@@ -136,15 +138,25 @@ describe("prompt assets", () => {
     expect(skill).toContain("原始 HTML 文件保持不变")
   })
 
-  it("tool description matches the reference-mode default contract", async () => {
+  it("tool description for export-document matches the markdown-only contract", async () => {
     const { createExportDocumentTool } = await import("../../plugins/coaching-tools/tools/export-document.js")
     const tool = createExportDocumentTool()
     const desc = (tool as unknown as { description: string }).description
 
-    expect(desc).toContain("引用模式包")
+    expect(desc).toContain("Markdown")
+    expect(desc).toContain("convert-md-to-html")
+    expect(desc).not.toContain("format")
+  })
+
+  it("tool description for convert-md-to-html matches the conversion contract", async () => {
+    const { createConvertMdToHtmlTool } = await import("../../plugins/coaching-tools/tools/convert-md-to-html.js")
+    const tool = createConvertMdToHtmlTool()
+    const desc = (tool as unknown as { description: string }).description
+
+    expect(desc).toContain("Markdown")
+    expect(desc).toContain("HTML")
     expect(desc).toContain("验证")
-    expect(desc).toContain("同级资源目录")
-    expect(desc).toContain("不可达则导出失败")
+    expect(desc).toContain("不可达则转换失败")
   })
 
   it("tool description for inline-html-resources matches the explicit inline contract", async () => {
@@ -177,6 +189,14 @@ describe("prompt assets", () => {
     expect(exportHtml).toContain("引用")
   })
 
+  it("export-workflow rule describes the two-step md-first flow", async () => {
+    const workflow = await readPromptAsset("rules/export-workflow.md")
+
+    expect(workflow).toContain("export-document")
+    expect(workflow).toContain("convert-md-to-html")
+    expect(workflow).toContain("HTML 只能从已有的 .md 文件转换")
+  })
+
   it("documents measurable performance budgets in the export workflow", async () => {
     const workflow = await readPromptAsset("rules/export-workflow.md")
     const exportHtml = await readPromptAsset("skills/export-html/SKILL.md")
@@ -184,10 +204,10 @@ describe("prompt assets", () => {
     expect(workflow).toContain("性能预算")
     expect(workflow).toContain("p50")
     expect(workflow).toContain("p95")
-    expect(workflow).toContain("不会在单次导出中重复复制相同资源")
+    expect(workflow).toContain("不会在单次转换中重复复制相同资源")
 
     expect(exportHtml).toContain("性能预算")
-    expect(exportHtml).toContain("不会在单次导出中重复复制相同资源")
+    expect(exportHtml).toContain("不会在单次转换中重复复制相同资源")
   })
 
   it("preserves the clear separation between default export and explicit inline", async () => {
