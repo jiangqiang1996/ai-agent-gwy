@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>图形推理系统总结与例题</title>
+  
+  <style>:root {
+  --primary: #4f46e5;
+  --primary-light: #818cf8;
+  --text: #1f2937;
+  --text-light: #6b7280;
+  --bg: #ffffff;
+  --bg-alt: #f9fafb;
+  --border: #e5e7eb;
+  --border-light: #f3f4f6;
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --sidebar-width: 260px;
+  --content-max: clamp(800px, 70vw, 1200px);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.8;
+  font-size: 16px;
+  min-height: 100vh;
+}
+
+body.has-toc {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+}
+
+body.no-toc {
+  display: flex;
+  justify-content: center;
+}
+
+nav.toc {
+  position: sticky;
+  top: 0;
+  grid-row: 1;
+  grid-column: 1;
+  height: 100vh;
+  background: var(--bg-alt);
+  border-right: 1px solid var(--border);
+  padding: 24px 16px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+
+nav.toc .toc-title {
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+}
+
+nav.toc ul { list-style: none; }
+
+nav.toc li {
+  margin: 4px 0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+nav.toc li:hover { background: var(--border-light); }
+
+nav.toc li.active {
+  background: #eef2ff;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+nav.toc a {
+  color: var(--text-light);
+  text-decoration: none;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+nav.toc li.active a { color: var(--primary); }
+
+nav.toc .toc-depth-2 { padding-left: 8px; }
+nav.toc .toc-depth-3 { padding-left: 20px; }
+nav.toc .toc-depth-4 { padding-left: 32px; }
+
+body.has-toc main {
+  grid-row: 1;
+  grid-column: 2;
+  padding: 40px 56px;
+  max-width: var(--content-max);
+  width: 100%;
+}
+
+body.no-toc main {
+  width: 100%;
+  max-width: var(--content-max);
+  padding: 40px 56px;
+}
+
+article {
+  background: var(--bg);
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+h1 { font-size: 28px; margin-bottom: 24px; border-bottom: 3px solid var(--primary); padding-bottom: 12px; color: var(--text); }
+h2 { font-size: 24px; margin-top: 40px; margin-bottom: 16px; color: var(--text); padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 20px; margin-top: 32px; margin-bottom: 12px; color: var(--text); }
+h4 { font-size: 17px; margin-top: 24px; margin-bottom: 8px; color: var(--text-light); }
+
+p { margin-bottom: 16px; }
+
+strong { font-weight: 700; color: var(--text); }
+em { font-style: italic; }
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+ul, ol { padding-left: 24px; margin-bottom: 16px; }
+li { margin: 6px 0; }
+
+table { border-collapse: collapse; width: 100%; margin: 20px 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+th { background: var(--bg-alt); font-weight: 600; color: var(--text); }
+tr:nth-child(even) { background: var(--bg-alt); }
+tr:hover { background: #eef2ff; }
+
+code { background: var(--border-light); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; font-family: var(--font-mono); color: var(--primary); }
+
+pre { background: var(--code-bg); padding: 20px; border-radius: 8px; overflow-x: auto; margin: 16px 0; line-height: 1.6; }
+pre code { background: none; padding: 0; color: var(--code-text); font-size: 14px; }
+
+blockquote { border-left: 4px solid var(--primary); margin: 20px 0; padding: 12px 20px; background: var(--bg-alt); border-radius: 0 8px 8px 0; color: var(--text-light); }
+blockquote p:last-child { margin-bottom: 0; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+article > img,
+article p > img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 20px auto;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+details { margin: 16px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+summary { padding: 12px 16px; background: var(--bg-alt); cursor: pointer; font-weight: 600; user-select: none; list-style: none; display: flex; align-items: center; gap: 8px; }
+summary::before { content: "▸"; transition: transform 0.2s; font-size: 12px; }
+details[open] summary::before { transform: rotate(90deg); }
+details > *:not(summary) { padding: 0 16px; }
+
+.tabs { margin: 16px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.tab-buttons { display: flex; border-bottom: 1px solid var(--border); background: var(--bg-alt); }
+.tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-size: 14px; color: var(--text-light); font-family: var(--font-sans); transition: all 0.2s; border-bottom: 2px solid transparent; }
+.tab-btn:hover { color: var(--primary); background: var(--border-light); }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; background: var(--bg); }
+.tab-panel { display: none; padding: 16px 20px; }
+.tab-panel.active { display: block; }
+
+.tip { position: relative; display: inline-block; border-bottom: 1px dashed var(--primary); cursor: help; color: var(--primary); }
+.tip-text { visibility: hidden; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 6px 12px; border-radius: 6px; font-size: 13px; white-space: nowrap; z-index: 10; opacity: 0; transition: opacity 0.2s; }
+.tip-text::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--text); }
+.tip:hover .tip-text { visibility: visible; opacity: 1; }
+
+.mermaid-container { margin: 20px 0; text-align: center; overflow: auto; }
+.mermaid-container pre.mermaid { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: left; font-size: 14px; }
+
+.chart-container { margin: 20px 0; text-align: center; }
+.chart-container canvas { display: block; width: 100% !important; height: auto !important; max-width: 100%; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+
+.svg-container {
+  margin: 20px 0;
+  text-align: center;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--bg);
+}
+.svg-container svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.canvas-container { margin: 20px 0; text-align: center; }
+.canvas-container canvas { display: block; width: 100%; max-width: 100%; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+
+.markmap-container { margin: 24px 0; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: radial-gradient(circle at top, #ffffff, #f8fafc 58%, #eef2ff 100%); box-shadow: 0 18px 40px rgba(79, 70, 229, 0.08); }
+.markmap-host { position: relative; min-height: 360px; }
+.markmap-host > svg { display: block; width: 100%; min-height: 360px; }
+
+pre.chart-error { background: #fef2f2; border: 1px solid #fecaca; color: var(--error); padding: 12px 16px; border-radius: 8px; font-family: var(--font-mono); font-size: 13px; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.badge-info { background: #dbeafe; color: #1d4ed8; }
+.badge-success { background: #dcfce7; color: #15803d; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-error { background: #fee2e2; color: #b91c1c; }
+
+.callout { padding: 16px 20px; border-radius: 8px; margin: 16px 0; border-left: 4px solid var(--primary); }
+.callout-info { background: #eff6ff; border-left-color: #3b82f6; }
+.callout-warning { background: #fffbeb; border-left-color: #f59e0b; }
+.callout-success { background: #f0fdf4; border-left-color: #10b981; }
+.callout-error { background: #fef2f2; border-left-color: #ef4444; }
+
+.katex-display { margin: 16px 0; overflow-x: auto; }
+
+@media (max-width: 1200px) {
+  :root {
+    --content-max: clamp(700px, 85vw, 1000px);
+  }
+  body.has-toc main,
+  body.no-toc main {
+    padding: 32px 36px;
+  }
+}
+
+@media (max-width: 1024px) {
+  body.has-toc {
+    display: block;
+  }
+  nav.toc { display: none; }
+  body.has-toc main,
+  body.no-toc main {
+    max-width: 100%;
+    padding: 24px;
+  }
+}
+
+@media print {
+  body.has-toc { display: block; }
+  nav.toc { display: none; }
+  body.has-toc main,
+  body.no-toc main {
+    max-width: 100%;
+    padding: 0;
+  }
+}
+[data-exam-question] {
+  position: relative;
+}
+
+.scratchpad-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scratchpad-overlay.active {
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.scratchpad-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 11;
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.scratchpad-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  color: var(--text);
+  transition: background 0.15s;
+}
+
+.scratchpad-btn:hover {
+  background: var(--border-light);
+}
+
+.scratchpad-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.scratchpad-btn-danger:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}</style>
+</head>
+<body class="has-toc">
+  <nav class="toc"><div class="toc-title">目录</div><ul><li class="toc-depth-1"><a href="#图形推理系统总结规律方法例题">图形推理系统总结：规律、方法、例题</a></li><li class="toc-depth-2"><a href="#一图推的总做题顺序">一、图推的总做题顺序</a></li><li class="toc-depth-2"><a href="#二高频规律体系">二、高频规律体系</a></li><li class="toc-depth-3"><a href="#1-位置规律">1. 位置规律</a></li><li class="toc-depth-3"><a href="#2-样式规律">2. 样式规律</a></li><li class="toc-depth-3"><a href="#3-属性规律">3. 属性规律</a></li><li class="toc-depth-3"><a href="#4-数量规律">4. 数量规律</a></li><li class="toc-depth-3"><a href="#5-结构规律">5. 结构规律</a></li><li class="toc-depth-3"><a href="#6-空间类规律">6. 空间类规律</a></li><li class="toc-depth-2"><a href="#三不同题型怎么切">三、不同题型怎么切</a></li><li class="toc-depth-3"><a href="#1-顺推型">1. 顺推型</a></li><li class="toc-depth-3"><a href="#2-类比型">2. 类比型</a></li><li class="toc-depth-3"><a href="#3-九宫格">3. 九宫格</a></li><li class="toc-depth-3"><a href="#4-分类分组">4. 分类分组</a></li><li class="toc-depth-3"><a href="#5-空间题">5. 空间题</a></li><li class="toc-depth-2"><a href="#四看到什么先想什么">四、看到什么先想什么</a></li><li class="toc-depth-2"><a href="#五最常见易错点">五、最常见易错点</a></li><li class="toc-depth-2"><a href="#六实战速记口诀">六、实战速记口诀</a></li><li class="toc-depth-2"><a href="#七代表性例题">七、代表性例题</a></li><li class="toc-depth-2"><a href="#八怎么把这套知识真正用熟">八、怎么把这套知识真正用熟</a></li><li class="toc-depth-2"><a href="#九最后总结">九、最后总结</a></li></ul></nav>
+  <main><article><h1 id="图形推理系统总结规律方法例题">图形推理系统总结：规律、方法、例题</h1>
+<p>图形推理本质上是在有限图形信息中找“稳定变化关系”。真正高频的规律并不多，难点在于题目会把位置、属性、数量、结构混在一起考，因此做题顺序比单个技巧更重要。</p>
+<div class="mermaid-container"><pre class="mermaid">mindmap
+  root((图形推理))
+    观察顺序
+      构成是否相同
+      位置是否变化
+      属性是否变化
+      数量是否变化
+      结构是否重组
+      是否涉及立体
+    高频规律
+      平移
+      旋转
+      翻转
+      对称
+      黑白
+      开闭
+      曲直
+      线角面点
+      一笔画
+      叠加去同存异
+    题型
+      顺推型
+      类比型
+      九宫格
+      分类分组
+      空间折叠</pre></div><h2 id="一图推的总做题顺序">一、图推的总做题顺序</h2>
+<ol>
+<li><p>先看“元素构成”<br>如果每幅图的基本元素都差不多，只是摆放方式不同，优先考虑位置规律和遍历规律；如果元素数量明显在变，优先考虑数量规律；如果图形外形整体在变但数量不敏感，优先考虑属性和结构。</p>
+</li>
+<li><p>再看“整体是否在动”<br>最先排查平移、旋转、翻转、顺逆时针遍历、里外交换、上下左右交换。这一步能解决大量序列题和类比题。</p>
+</li>
+<li><p>再看“图形性质有没有变化”<br>对称性、开闭性、曲直性、凹凸性、黑白填充、线条粗细、连通性，都是常见稳定考点。</p>
+</li>
+<li><p>最后再做“数量统计”<br>数量规律最容易漏，也最费时间。通常按“面数 -&gt; 线数 -&gt; 角数 -&gt; 交点数 -&gt; 部件数 -&gt; 笔画数”的顺序排查。</p>
+</li>
+<li><p>涉及立体时，立刻切换到空间题思维<br>折纸盒、截面图、三视图、相对面、相邻面、阴影朝向，和普通平面规律不是一套逻辑，不要混着想。</p>
+</li>
+</ol>
+<h2 id="二高频规律体系">二、高频规律体系</h2>
+<h3 id="1-位置规律">1. 位置规律</h3>
+<p>位置规律的核心是“图形本身没怎么变，变的是放置方式”。</p>
+<ol>
+<li><p>平移<br>元素沿固定方向移动，常见于小黑点、小箭头、小三角、小圆点在格子或边界上移动。注意等步长移动、跳格移动、循环移动。</p>
+</li>
+<li><p>旋转<br>图形按固定角度旋转，最常见是 90 度、180 度、45 度。题目常故意把图形做成近似对称，让你误判成翻转。</p>
+</li>
+<li><p>翻转<br>包括左右翻转、上下翻转、对角翻转。判断翻转时，重点看有方向性的细节，如缺口、箭头、阴影、黑点位置。</p>
+</li>
+<li><p>遍历<br>元素按顺时针、逆时针、Z 字形、对角线、行列轮换等路径移动。九宫格里尤其常见。</p>
+</li>
+<li><p>里外交换<br>内外层图形互换、中心与外圈互换、角上元素与边上元素互换，是矩阵题高频考法。</p>
+</li>
+</ol>
+<h3 id="2-样式规律">2. 样式规律</h3>
+<p>样式规律强调“同一个元素，外观状态在变”。</p>
+<ol>
+<li><p>黑白变化<br>空心变实心、黑白交替、黑块数量变化、局部填黑后再移动，是最常见样式规律之一。</p>
+</li>
+<li><p>线面变化<br>线条图变封闭面图，或由轮廓线变填充块。要注意“线的数量不变，但封闭区域变了”。</p>
+</li>
+<li><p>大小变化<br>元素大小规律可能呈递增、递减、交替变化，也可能和位置变化叠加考查。</p>
+</li>
+<li><p>粗细与虚实<br>线条粗细、实线虚线、阴影方向、纹理方向，有时本身就是规律。</p>
+</li>
+</ol>
+<h3 id="3-属性规律">3. 属性规律</h3>
+<p>属性规律常在图形“不太会动，也不太会数”时出现。</p>
+<ol>
+<li><p>对称性<br>看轴对称和中心对称。常见陷阱是把“旋转后重合”误当成轴对称，或者只看整体不看局部。</p>
+</li>
+<li><p>曲直性<br>图形由曲线构成还是直线构成，或者曲直混合比例是否变化。</p>
+</li>
+<li><p>开闭性<br>图形是封闭的还是开口的，开口朝向是否变化，封闭区域是否增加。</p>
+</li>
+<li><p>凹凸性<br>外轮廓是否有内凹或外凸，凹凸角数量有时直接构成数量规律。</p>
+</li>
+<li><p>连通性<br>是一整块连通，还是分成若干独立部分；是相交还是相离；是否由断开变连接。</p>
+</li>
+</ol>
+<h3 id="4-数量规律">4. 数量规律</h3>
+<p>数量规律是图推里最稳定、也最容易出细节题的一类。</p>
+<ol>
+<li><p>面数量<br>数封闭区域，常用于多边形叠加、线条分割图、网格图。</p>
+</li>
+<li><p>线数量<br>数线段条数、边数、平行线组数、射线数。遇到复杂图先拆局部再统计。</p>
+</li>
+<li><p>角数量<br>数尖角、直角、钝角、内角、外角，有时题目只考某一种特殊角。</p>
+</li>
+<li><p>点数量<br>数交点、端点、切点、顶点、黑点、白点。交点题经常和相交线条结合出现。</p>
+</li>
+<li><p>部件数量<br>相同小元素的个数、种类数、每层元素数、内外元素数之和或差。</p>
+</li>
+<li><p>笔画数<br>一笔画问题本质上是奇点数判断：奇点为 0 个或 2 个时可一笔画；奇点大于 2 个时不可一笔画。</p>
+</li>
+</ol>
+<h3 id="5-结构规律">5. 结构规律</h3>
+<p>结构规律关注“图形由哪些部分组成、怎么组合”。</p>
+<ol>
+<li><p>同构与异构<br>图形由相同部件组成，只是拼接方式不同；或者由不同部件按固定方式组合。</p>
+</li>
+<li><p>叠加<br>常见有直接叠加、去同存异、去异存同、黑白叠加、相交部分保留等。</p>
+</li>
+<li><p>拆分与重组<br>整体图形切成几个小块，再重新拼合。题目常在类比题里考“拆法是否一致”。</p>
+</li>
+<li><p>内外层分开看<br>双层图、三层图常常“外层走位置、内层走样式”，不要把所有信息混成一锅。</p>
+</li>
+<li><p>局部替换<br>每次只替换一个角、一个边、一个小元素，属于结构微调型规律。</p>
+</li>
+</ol>
+<h3 id="6-空间类规律">6. 空间类规律</h3>
+<ol>
+<li><p>折纸盒<br>重点记相对面、相邻面、公共边方向。判断时先排除“本不相邻却被放成相邻”的选项。</p>
+</li>
+<li><p>折叠与打孔<br>先看折叠轴，再看打孔点相对折线的位置，最后做镜像还原。</p>
+</li>
+<li><p>截面图<br>关注切面是否连续、是否经过顶点、是否可能形成曲线或闭合形。</p>
+</li>
+<li><p>三视图<br>主视、俯视、左视要和实体的长宽高一一对应，容易错在遮挡关系和凸起位置。</p>
+</li>
+</ol>
+<h2 id="三不同题型怎么切">三、不同题型怎么切</h2>
+<h3 id="1-顺推型">1. 顺推型</h3>
+<p>前几幅图到后一幅图，最先找连续变化。<br>优先级通常是：位置 -&gt; 样式 -&gt; 属性 -&gt; 数量 -&gt; 结构。</p>
+<h3 id="2-类比型">2. 类比型</h3>
+<p>A:B :: C:? 的关键不是“像不像”，而是“A 到 B 发生了什么变化”。<br>变化如果有两步，C 也通常要完整复现两步。</p>
+<h3 id="3-九宫格">3. 九宫格</h3>
+<p>九宫格一定要同时看行规律和列规律。<br>高频关系包括：第三格由前两格叠加得到、每行元素数递增、行列分别控制不同属性、元素按固定路径遍历。</p>
+<h3 id="4-分类分组">4. 分类分组</h3>
+<p>这类题的关键是找到“同组之间唯一稳定共同点”。<br>通常从对称、曲直、封闭、笔画、元素种类、局部特征六个角度切。</p>
+<h3 id="5-空间题">5. 空间题</h3>
+<p>不要在脑中硬转太久，先抓最稳定信息：相对面、公共边、特殊符号面、阴影面。</p>
+<h2 id="四看到什么先想什么">四、看到什么先想什么</h2>
+<table>
+<thead>
+<tr>
+<th>题面特征</th>
+<th>优先考虑</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>元素一样，只是位置不同</td>
+<td>平移、旋转、翻转、遍历</td>
+</tr>
+<tr>
+<td>黑白/空实变化明显</td>
+<td>黑白规律、填充规律</td>
+</tr>
+<tr>
+<td>图形不太动，但性质变了</td>
+<td>对称、开闭、曲直、凹凸</td>
+</tr>
+<tr>
+<td>元素个数明显变多变少</td>
+<td>点线角面、部件数、笔画数</td>
+</tr>
+<tr>
+<td>图里有明显内外两层</td>
+<td>分层看规律</td>
+</tr>
+<tr>
+<td>前两图能“合成”第三图</td>
+<td>叠加、去同存异、去异存同</td>
+</tr>
+<tr>
+<td>题目是立方体/折纸</td>
+<td>相对面、相邻面、折叠镜像</td>
+</tr>
+</tbody></table>
+<h2 id="五最常见易错点">五、最常见易错点</h2>
+<ol>
+<li><p>把翻转看成旋转<br>解决方法是盯住缺口、阴影、箭头、小黑点等方向性细节。</p>
+</li>
+<li><p>只看整体，不看局部<br>很多题整体类似，但真正规律藏在某一个角、某一条边、某一个小元素上。</p>
+</li>
+<li><p>一上来就数数量<br>数量规律应该在位置和属性排查后再上，避免把简单题做复杂。</p>
+</li>
+<li><p>混淆轴对称和中心对称<br>轴对称看“沿一条线折叠能否重合”，中心对称看“旋转 180 度能否重合”。</p>
+</li>
+<li><p>一笔画只靠感觉<br>必须落到奇点数：奇点 0 或 2 可一笔画，奇点超过 2 不可一笔画。</p>
+</li>
+</ol>
+<h2 id="六实战速记口诀">六、实战速记口诀</h2>
+<p>位置先行，属性补充，数量压轴，结构收尾，立体单算。</p>
+<p>更具体一点可以记成：</p>
+<p>先看像不像，再看动没动；<br>动就查位置，不动查属性；<br>属性不明显，再数点线角面；<br>图层很多分开看，立体题换脑子做。</p>
+<h2 id="七代表性例题">七、代表性例题</h2>
+<section data-exam-question>
+<h3>例题 1：顺推型中的旋转规律</h3>
+<p><strong>题干：</strong>观察下列图形序列，选择最合适的下一项。</p>
+<div style='display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;'>
+  <div>
+    <div style='text-align:center;'>1</div>
+    <svg width='90' height='90' viewBox='0 0 80 80'>
+      <rect x='5' y='5' width='70' height='70' rx='8' fill='none' stroke='#2563eb' stroke-width='2'/>
+      <polygon points='40,14 58,32 48,32 48,60 32,60 32,32 22,32' fill='#2563eb'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>2</div>
+    <svg width='90' height='90' viewBox='0 0 80 80'>
+      <rect x='5' y='5' width='70' height='70' rx='8' fill='none' stroke='#2563eb' stroke-width='2'/>
+      <polygon points='66,40 48,58 48,48 20,48 20,32 48,32 48,22' fill='#2563eb'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>3</div>
+    <svg width='90' height='90' viewBox='0 0 80 80'>
+      <rect x='5' y='5' width='70' height='70' rx='8' fill='none' stroke='#2563eb' stroke-width='2'/>
+      <polygon points='40,66 58,48 48,48 48,20 32,20 32,48 22,48' fill='#2563eb'/>
+    </svg>
+  </div>
+</div>
+<p><strong>选项：</strong></p>
+<div style='display:flex;gap:16px;flex-wrap:wrap;'>
+  <div>
+    <div style='text-align:center;'>A</div>
+    <svg width='90' height='90' viewBox='0 0 80 80'>
+      <rect x='5' y='5' width='70' height='70' rx='8' fill='none' stroke='#111827' stroke-width='2'/>
+      <polygon points='14,40 32,58 32,48 60,48 60,32 32,32 32,22' fill='#111827'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>B</div>
+    <svg width='90' height='90' viewBox='0 0 80 80'>
+      <rect x='5' y='5' width='70' height='70' rx='8' fill='none' stroke='#111827' stroke-width='2'/>
+      <polygon points='40,14 58,32 48,32 48,60 32,60 32,32 22,32' fill='#111827'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>C</div>
+    <svg width='90' height='90' viewBox='0 0 80 80'>
+      <rect x='5' y='5' width='70' height='70' rx='8' fill='none' stroke='#111827' stroke-width='2'/>
+      <polygon points='40,66 58,48 48,48 48,20 32,20 32,48 22,48' fill='#111827'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>D</div>
+    <svg width='90' height='90' viewBox='0 0 80 80'>
+      <rect x='5' y='5' width='70' height='70' rx='8' fill='none' stroke='#111827' stroke-width='2'/>
+      <polygon points='66,40 48,58 48,48 20,48 20,32 48,32 48,22' fill='#111827'/>
+    </svg>
+  </div>
+</div>
+<details>
+<summary>点击查看答案与解析</summary>
+<p><strong>正确答案：A</strong></p>
+<p><strong>解析：</strong>箭头方向依次为上、右、下，说明每一步顺时针旋转 90 度，下一幅应为向左。此题是最标准的位置规律中的旋转题。做这类题时，优先盯住有方向性的元素，避免把旋转和翻转混淆。</p>
+</details>
+</section>
+
+<section data-exam-question>
+<h3>例题 2：数量和样式的组合规律</h3>
+<p><strong>题干：</strong>观察下列图形序列，选择最合适的下一项。</p>
+<div style='display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;'>
+  <div>
+    <div style='text-align:center;'>1</div>
+    <svg width='100' height='90' viewBox='0 0 100 80'>
+      <rect x='20' y='25' width='20' height='20' fill='none' stroke='#2563eb' stroke-width='3'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>2</div>
+    <svg width='100' height='90' viewBox='0 0 100 80'>
+      <rect x='20' y='25' width='20' height='20' fill='#2563eb'/>
+      <rect x='50' y='25' width='20' height='20' fill='#2563eb'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>3</div>
+    <svg width='120' height='90' viewBox='0 0 120 80'>
+      <rect x='15' y='25' width='18' height='18' fill='none' stroke='#2563eb' stroke-width='3'/>
+      <rect x='45' y='25' width='18' height='18' fill='none' stroke='#2563eb' stroke-width='3'/>
+      <rect x='75' y='25' width='18' height='18' fill='none' stroke='#2563eb' stroke-width='3'/>
+    </svg>
+  </div>
+</div>
+<p><strong>选项：</strong></p>
+<div style='display:flex;gap:16px;flex-wrap:wrap;'>
+  <div>
+    <div style='text-align:center;'>A</div>
+    <svg width='120' height='90' viewBox='0 0 120 80'>
+      <rect x='5' y='25' width='18' height='18' fill='none' stroke='#111827' stroke-width='3'/>
+      <rect x='33' y='25' width='18' height='18' fill='none' stroke='#111827' stroke-width='3'/>
+      <rect x='61' y='25' width='18' height='18' fill='none' stroke='#111827' stroke-width='3'/>
+      <rect x='89' y='25' width='18' height='18' fill='none' stroke='#111827' stroke-width='3'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>B</div>
+    <svg width='120' height='90' viewBox='0 0 120 80'>
+      <rect x='5' y='25' width='18' height='18' fill='#111827'/>
+      <rect x='33' y='25' width='18' height='18' fill='#111827'/>
+      <rect x='61' y='25' width='18' height='18' fill='#111827'/>
+      <rect x='89' y='25' width='18' height='18' fill='#111827'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>C</div>
+    <svg width='140' height='90' viewBox='0 0 140 80'>
+      <rect x='5' y='25' width='18' height='18' fill='none' stroke='#111827' stroke-width='3'/>
+      <rect x='31' y='25' width='18' height='18' fill='none' stroke='#111827' stroke-width='3'/>
+      <rect x='57' y='25' width='18' height='18' fill='none' stroke='#111827' stroke-width='3'/>
+      <rect x='83' y='25' width='18' height='18' fill='none' stroke='#111827' stroke-width='3'/>
+      <rect x='109' y='25' width='18' height='18' fill='none' stroke='#111827' stroke-width='3'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>D</div>
+    <svg width='140' height='90' viewBox='0 0 140 80'>
+      <rect x='5' y='25' width='18' height='18' fill='#111827'/>
+      <rect x='31' y='25' width='18' height='18' fill='#111827'/>
+      <rect x='57' y='25' width='18' height='18' fill='#111827'/>
+      <rect x='83' y='25' width='18' height='18' fill='#111827'/>
+      <rect x='109' y='25' width='18' height='18' fill='#111827'/>
+    </svg>
+  </div>
+</div>
+<details>
+<summary>点击查看答案与解析</summary>
+<p><strong>正确答案：B</strong></p>
+<p><strong>解析：</strong>个数依次为 1、2、3，因此下一幅应为 4 个；同时样式在“空心、实心、空心”之间交替，所以第四幅应为“4 个实心方块”。这类题说明数量规律经常和样式规律叠加，不能只盯一个维度。</p>
+</details>
+</section>
+
+<section data-exam-question>
+<h3>例题 3：分类题中的对称性判断</h3>
+<p><strong>题干：</strong>下列四个图形中，哪一项与其他三项不属于同一类？</p>
+<div style='display:flex;gap:16px;flex-wrap:wrap;'>
+  <div>
+    <div style='text-align:center;'>A</div>
+    <svg width='100' height='100' viewBox='0 0 80 80'>
+      <polygon points='40,10 62,40 40,70 18,40' fill='none' stroke='#111827' stroke-width='3'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>B</div>
+    <svg width='100' height='100' viewBox='0 0 80 80'>
+      <polygon points='40,14 62,60 18,60' fill='none' stroke='#111827' stroke-width='3'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>C</div>
+    <svg width='100' height='100' viewBox='0 0 80 80'>
+      <polygon points='20,18 62,18 20,60' fill='none' stroke='#111827' stroke-width='3'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>D</div>
+    <svg width='100' height='100' viewBox='0 0 80 80'>
+      <rect x='18' y='18' width='44' height='44' fill='none' stroke='#111827' stroke-width='3'/>
+    </svg>
+  </div>
+</div>
+<details>
+<summary>点击查看答案与解析</summary>
+<p><strong>正确答案：C</strong></p>
+<p><strong>解析：</strong>A 菱形、B 等腰三角形、D 正方形都至少具有一条对称轴；C 为直角三角形，不具备轴对称性，因此不属于同类。分类题的关键是找“唯一稳定共同点”，本题的共同点就是轴对称。</p>
+</details>
+</section>
+
+<section data-exam-question>
+<h3>例题 4：一笔画判断</h3>
+<p><strong>题干：</strong>下列图形中，哪一项可以一笔画成？</p>
+<div style='display:flex;gap:16px;flex-wrap:wrap;'>
+  <div>
+    <div style='text-align:center;'>A</div>
+    <svg width='100' height='100' viewBox='0 0 80 80'>
+      <line x1='40' y1='10' x2='40' y2='55' stroke='#111827' stroke-width='4'/>
+      <line x1='18' y1='25' x2='62' y2='25' stroke='#111827' stroke-width='4'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>B</div>
+    <svg width='100' height='100' viewBox='0 0 80 80'>
+      <rect x='18' y='18' width='44' height='44' fill='none' stroke='#111827' stroke-width='4'/>
+      <line x1='18' y1='18' x2='62' y2='62' stroke='#111827' stroke-width='4'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>C</div>
+    <svg width='100' height='100' viewBox='0 0 80 80'>
+      <line x1='40' y1='14' x2='40' y2='66' stroke='#111827' stroke-width='4'/>
+      <line x1='14' y1='40' x2='66' y2='40' stroke='#111827' stroke-width='4'/>
+    </svg>
+  </div>
+  <div>
+    <div style='text-align:center;'>D</div>
+    <svg width='100' height='100' viewBox='0 0 80 80'>
+      <line x1='40' y1='40' x2='18' y2='18' stroke='#111827' stroke-width='4'/>
+      <line x1='40' y1='40' x2='62' y2='18' stroke='#111827' stroke-width='4'/>
+      <line x1='40' y1='40' x2='40' y2='66' stroke='#111827' stroke-width='4'/>
+    </svg>
+  </div>
+</div>
+<details>
+<summary>点击查看答案与解析</summary>
+<p><strong>正确答案：B</strong></p>
+<p><strong>解析：</strong></p>
+<p>A 是 T 形图，顶部两个端点、底部一个端点、交汇点共形成 4 个奇点，不能一笔画。</p>
+<p>B 为正方形加一条对角线，左上角和右下角为奇点，其余为偶点，共 2 个奇点，可以一笔画。</p>
+<p>C 为十字图，有 4 个奇点，不能一笔画。</p>
+<p>D 为三叉图，有 3 个奇点，也不能一笔画。</p>
+<p>一笔画题必须落回“奇点数”判断，不能靠目测。</p>
+</details>
+</section>
+
+<h2 id="八怎么把这套知识真正用熟">八、怎么把这套知识真正用熟</h2>
+<ol>
+<li><p>训练顺序<br>先单练位置规律，再练属性和数量，最后做综合题和空间题。不要一开始就刷混合套题。</p>
+</li>
+<li><p>建立自己的排查模板<br>每做一道题，都强迫自己按“位置 -&gt; 属性 -&gt; 数量 -&gt; 结构 -&gt; 空间”走一遍，速度会越来越快。</p>
+</li>
+<li><p>错题按规律归类<br>不要只记题号，要记“这题错在把翻转看成旋转”“这题漏数封闭区域”“这题没有分内外层”。</p>
+</li>
+<li><p>碰到难题先保底<br>如果一分钟内没有头绪，先排明显错误选项，再用最稳定的特征做比较，不要死耗。</p>
+</li>
+</ol>
+<h2 id="九最后总结">九、最后总结</h2>
+<p>图推并不是靠“感觉像不像”，而是靠稳定的观察顺序。<br>真正高频的核心只有五类：位置、属性、数量、结构、空间。<br>把这五类按优先级练熟，再配合题型化拆解，你的图推速度和正确率都会明显提升。</p>
+</article></main>
+  <script src="./图形推理系统总结与例题-2026-04-17-07-54-21Z-assets/runtime/mermaid/dist/mermaid.min.js"></script>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Mermaid init
+    if (typeof mermaid !== 'undefined') {
+      mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+      mermaid.run({ querySelector: '.mermaid' });
+    }
+
+    // Scratchpad init
+    (function() {
+      var all = document.querySelectorAll('[data-exam-question]');
+      var top = [];
+      all.forEach(function(el) {
+        var p = el.parentElement;
+        var nested = false;
+        while (p) {
+          if (p.hasAttribute && p.hasAttribute('data-exam-question')) { nested = true; break; }
+          p = p.parentElement;
+        }
+        if (!nested) top.push(el);
+      });
+      top.forEach(function(c) {
+        try { spSetup(c); } catch(e) { console.error('Scratchpad error', e); }
+      });
+      function spSetup(ct) {
+        var cv = document.createElement('canvas');
+        cv.className = 'scratchpad-overlay';
+        var dpr = window.devicePixelRatio || 1;
+        var st = [];
+        var cur = null;
+        var pid = null;
+        var on = false;
+        function spResize() {
+          var r = ct.getBoundingClientRect();
+          cv.width = Math.round(r.width * dpr);
+          cv.height = Math.round(r.height * dpr);
+          cv.style.width = r.width + 'px';
+          cv.style.height = r.height + 'px';
+          spRedraw();
+        }
+        function spRedraw() {
+          var x = cv.getContext('2d');
+          if (!x) return;
+          x.setTransform(dpr, 0, 0, dpr, 0, 0);
+          x.clearRect(0, 0, cv.width, cv.height);
+          x.strokeStyle = '#ef4444';
+          x.lineWidth = 2;
+          x.lineCap = 'round';
+          x.lineJoin = 'round';
+          for (var i = 0; i < st.length; i++) {
+            var s = st[i];
+            if (s.length < 2) continue;
+            x.beginPath();
+            x.moveTo(s[0].x, s[0].y);
+            for (var j = 1; j < s.length; j++) x.lineTo(s[j].x, s[j].y);
+            x.stroke();
+          }
+        }
+        var bar = document.createElement('div');
+        bar.className = 'scratchpad-controls';
+        var bd = document.createElement('button');
+        bd.className = 'scratchpad-btn';
+        bd.textContent = '涂鸦';
+        var bc = document.createElement('button');
+        bc.className = 'scratchpad-btn scratchpad-btn-danger';
+        bc.textContent = '清除';
+        bc.style.display = 'none';
+        var bx = document.createElement('button');
+        bx.className = 'scratchpad-btn';
+        bx.textContent = '退出';
+        bx.style.display = 'none';
+        bar.appendChild(bd);
+        bar.appendChild(bc);
+        bar.appendChild(bx);
+        ct.appendChild(cv);
+        ct.appendChild(bar);
+        bd.addEventListener('click', function() {
+          on = !on;
+          cv.classList.toggle('active', on);
+          bd.classList.toggle('active', on);
+          bd.textContent = on ? '涂鸦中' : '涂鸦';
+          bc.style.display = on ? '' : 'none';
+          bx.style.display = on ? '' : 'none';
+          if (on) spResize();
+        });
+        bc.addEventListener('click', function() {
+          st.length = 0;
+          var x = cv.getContext('2d');
+          if (x) { x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, cv.width, cv.height); }
+        });
+        bx.addEventListener('click', function() {
+          on = false;
+          st.length = 0;
+          cv.classList.remove('active');
+          bd.classList.remove('active');
+          bd.textContent = '涂鸦';
+          bc.style.display = 'none';
+          bx.style.display = 'none';
+          var x = cv.getContext('2d');
+          if (x) { x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, cv.width, cv.height); }
+        });
+        cv.addEventListener('pointerdown', function(e) {
+          if (!on) return;
+          e.preventDefault();
+          cv.setPointerCapture(e.pointerId);
+          pid = e.pointerId;
+          var r = cv.getBoundingClientRect();
+          cur = [{ x: e.clientX - r.left, y: e.clientY - r.top }];
+        });
+        cv.addEventListener('pointermove', function(e) {
+          if (!on || e.pointerId !== pid || !cur) return;
+          e.preventDefault();
+          var r = cv.getBoundingClientRect();
+          var pt = { x: e.clientX - r.left, y: e.clientY - r.top };
+          cur.push(pt);
+          var x = cv.getContext('2d');
+          if (x && cur.length >= 2) {
+            x.strokeStyle = '#ef4444';
+            x.lineWidth = 2;
+            x.lineCap = 'round';
+            x.lineJoin = 'round';
+            x.beginPath();
+            x.moveTo(cur[cur.length - 2].x, cur[cur.length - 2].y);
+            x.lineTo(pt.x, pt.y);
+            x.stroke();
+          }
+        });
+        function spEnd(e) {
+          if (e.pointerId !== pid) return;
+          if (cur && cur.length > 0) st.push(cur);
+          cur = null;
+          pid = null;
+        }
+        cv.addEventListener('pointerup', spEnd);
+        cv.addEventListener('pointercancel', spEnd);
+        if (typeof ResizeObserver !== 'undefined') {
+          new ResizeObserver(function() { if (on) spResize(); }).observe(ct);
+        }
+      }
+    })();
+});
+
+
+// Tab switching
+function switchTab(event, panelId) {
+  var container = event.target.closest('.tabs');
+  if (!container) return;
+  container.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  container.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+  event.target.classList.add('active');
+  var panel = document.getElementById(panelId);
+  if (panel) panel.classList.add('active');
+}
+
+
+// TOC scroll highlight
+document.addEventListener('DOMContentLoaded', function() {
+  var nav = document.querySelector('nav.toc');
+  if (!nav) return;
+  var links = nav.querySelectorAll('a');
+  if (links.length === 0) return;
+  var headingIds = Array.from(links).map(function(a) { return a.getAttribute('href').slice(1); });
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        nav.querySelectorAll('li').forEach(function(li) { li.classList.remove('active'); });
+        var link = nav.querySelector('a[href="#' + entry.target.id + '"]');
+        if (link && link.parentElement) link.parentElement.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  headingIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+});
+</script>
+</body>
+</html>
