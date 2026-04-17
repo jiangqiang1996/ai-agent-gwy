@@ -70,6 +70,10 @@ function buildQuestionTemplate(
   }
 
   const questionId = `example-${Date.now()}`
+  const isVisualSubject = selectedSubject === "判断推理" && (selectedLeaf?.includes("图形推理") ?? false)
+  const visualConstraint = isVisualSubject
+    ? `5. 【图形推理专属】题干和选项都必须用 SVG 代码块绘制完整图形，禁止用文字描述图形外观（如"A. 一个带阴影的三角形"）。题干按实际布局绘制九宫格/行列/分组图，缺省位标问号；选项 A/B/C/D 各用一个独立 SVG 代码块绘制完整图案（建议宽高 120~150px）。禁止使用单元素简单图形，必须达到国考/省考真题的图案复杂度：多元素组合、规律变换叠加、含曲线/折线/阴影/区域分割等细节。每个格子/位置的图案都要逐一绘制，不得只画一个图然后文字说"其余类似"。`
+    : ""
   const teacherPrompt = `请围绕${selectedSubject}${selectedLeaf ? " (" + selectedLeaf + ")" : ""}给出 1 个代表性经典例题，并完成详细讲解。
 
 要求:
@@ -77,6 +81,7 @@ function buildQuestionTemplate(
 2. 再给出 1 道有代表性的例题，题型可以是选择题或更适合讲解的形式
 3. 必须包含题目文本、答案要点和详细解析
 4. 解释中要突出思路、易错点和为什么这个例题有代表性
+${visualConstraint}
 
 输出格式:
 知识点总结: [1-2句]
