@@ -94,17 +94,30 @@ ctx.stroke();
 
 ### 交互组件
 
-折叠展开（题目→点击显示解析）：
+题目+答案折叠（题目可见，点击显示答案解析）：
 ```html
+<section data-exam-question>
+
+**【例题】** 某商品先涨价 20%...
+
+A. 选项一
+B. 选项二
+C. 选项三
+D. 选项四
+
 <details>
-<summary>📋 题目：某商品先涨价 20%...</summary>
+<summary>点击查看答案与解析</summary>
 
 **正确答案：B**
 
-解析内容...
+**解析：** 详细解析内容...
 
 </details>
+
+</section>
 ```
+
+> 所有题目（例题、练习题、讲解题）都必须用 `<section data-exam-question>` 包裹，答案用 `<details>` 折叠。
 
 Tab 切换（多种解法）：
 ```html
@@ -133,6 +146,7 @@ Tab 切换（多种解法）：
 转换的 HTML 支持在试题区域上进行鼠标涂鸦（Scratchpad）：
 
 - 在 .md 内容中用 `<section data-exam-question>` 或 `<div data-exam-question>` 包裹题目内容即可启用涂鸦板。
+- **所有题目（例题、练习题、讲解题、用户提供的题目）都必须使用此标记**，确保每道题都支持涂鸦/标记/打草稿。
 - 涂鸦板仅在标记区域内激活，不影响其他内容。
 - 涂鸦为临时功能，刷新页面后自动消失。
 - 如果没有 `data-exam-question` 标记，不会注入涂鸦板功能。
@@ -140,10 +154,23 @@ Tab 切换（多种解法）：
 示例：
 ```html
 <section data-exam-question>
-**题目：** 某商品先涨价 20%...
+
+**【例题】** 某商品先涨价 20%...
 
 A. 选项一
 B. 选项二
+C. 选项三
+D. 选项四
+
+<details>
+<summary>点击查看答案与解析</summary>
+
+**正确答案：B**
+
+**解析：** 详细解析内容...
+
+</details>
+
 </section>
 ```
 

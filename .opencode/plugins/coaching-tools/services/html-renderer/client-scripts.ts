@@ -35,12 +35,16 @@ export function buildClientScripts(options: ClientScriptOptions): string {
         if (!canvas) return;
         var parent = canvas.parentElement;
         if (parent) {
-          canvas.width = parent.clientWidth || 800;
-          canvas.height = Math.max(300, Math.round((parent.clientWidth || 800) * 0.6));
+          var w = parent.clientWidth;
+          canvas.width = w;
+          canvas.height = Math.max(300, Math.round(w * 0.56));
         }
         try {
           var encoded = canvas.getAttribute('data-chart') || '';
           var config = JSON.parse(decodeURIComponent(encoded));
+          if (!config.options) config.options = {};
+          if (!config.options.responsive) config.options.responsive = true;
+          if (!config.options.maintainAspectRatio) config.options.maintainAspectRatio = true;
           new Chart(canvas, config);
         } catch(e) {
           console.error('Chart.js init failed', e);
@@ -56,8 +60,9 @@ export function buildClientScripts(options: ClientScriptOptions): string {
       try {
         var parent = canvas.parentElement;
         if (parent) {
-          canvas.width = parent.clientWidth || 800;
-          canvas.height = Math.max(320, Math.round((parent.clientWidth || 800) * 0.56));
+          var w = parent.clientWidth;
+          canvas.width = w;
+          canvas.height = Math.max(320, Math.round(w * 0.56));
         }
         var ctx = canvas.getContext('2d');
         if (!ctx) return;

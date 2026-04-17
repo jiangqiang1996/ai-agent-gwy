@@ -86,6 +86,99 @@ function extractTokenText(tokens: unknown[]): string {
     .join("")
 }
 
+const QUESTION_MARKER_RE = /(?:【(?:例题|题目|练习|真题|考题)】|(?<![^\n])\*\*(?:【)?(?:例题|题目|练习|真题|考题)(?:】)?\*\*)/
+const OPTION_LINE_RE = /^[A-D][.．、)\s]/
+const ANSWER_LINE_RE = /(?:正确答案[：:]\s*[A-D]|答案[：:]\s*[A-D]|选\s*[A-D])/
+const DETAILS_OPEN_RE = /<details[\s>]/
+const EXAM_QUESTION_RE = /data-exam-question/
+
+function autoWrapQuestions(html: string): string {
+  if (EXAM_QUESTION_RE.test(html)) return html
+  if (!QUESTION_MARKER_RE.test(html) && !OPTION_LINE_RE.test(html)) return html
+
+  const lines = html.split("\n")
+  const result: string[] = []
+  let inQuestion = false
+  let questionLines: string[] = []
+  let foundOptions = false
+
+  function flushQuestion(): void {
+    if (inQuestion && questionLines.length > 0) {
+      const answerIdx = questionLines.findIndex((l) => ANSWER_LINE_RE.test(l.trim()) || DETAILS_OPEN_RE.test(l))
+      let body: string
+      if (answerIdx > 0) {
+        const questionPart = questionLines.slice(0, answerIdx).join("\n")
+        const answerPart = questionLines.slice(answerIdx).join("\n")
+        const insideDetails = DETAILS_OPEN_RE.test(answerPart)
+        if (insideDetails) {
+          body = questionPart + "\n" + answerPart
+        } else {
+          body = questionPart + '\n<details>\n<summary>点击查看答案与解析</summary>\n\n' + answerPart + "\n\n</details>"
+        }
+      } else {
+        body = questionLines.join("\n")
+      }
+      result.push('<section data-exam-question>', body, "</section>")
+    } else {
+      for (const l of questionLines) result.push(l)
+    }
+    questionLines = []
+    inQuestion = false
+    foundOptions = false
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+
+    if (EXAM_QUESTION_RE.test(trimmed)) {
+      flushQuestion()
+      result.push(line)
+      continue
+    }
+
+    if (trimmed.startsWith("<h") && /^<h[1-6]/.test(trimmed)) {
+      flushQuestion()
+      result.push(line)
+      continue
+    }
+
+    const isQuestionStart = QUESTION_MARKER_RE.test(trimmed)
+    const isOptionLine = OPTION_LINE_RE.test(trimmed)
+
+    if (isQuestionStart && inQuestion) {
+      flushQuestion()
+    }
+
+    if (!inQuestion && (isQuestionStart || isOptionLine)) {
+      inQuestion = true
+      questionLines = [line]
+      if (isOptionLine) foundOptions = true
+      continue
+    }
+
+    if (inQuestion) {
+      if (isOptionLine) foundOptions = true
+      if (trimmed === "" && foundOptions && i + 1 < lines.length) {
+        const nextTrimmed = lines[i + 1].trim()
+        if (ANSWER_LINE_RE.test(nextTrimmed) || DETAILS_OPEN_RE.test(nextTrimmed) || QUESTION_MARKER_RE.test(nextTrimmed) || /^<h[1-6]/.test(nextTrimmed)) {
+          questionLines.push(line)
+          flushQuestion()
+          continue
+        }
+      }
+      questionLines.push(line)
+      continue
+    }
+
+    result.push(line)
+  }
+
+  flushQuestion()
+
+  return result.join("\n")
+}
+
 export async function renderMarkdown(content: string, options: RenderMarkdownOptions): Promise<MarkdownRenderResult> {
   const toc: TocEntry[] = []
   const usedIds = new Set<string>()
@@ -165,7 +258,8 @@ export async function renderMarkdown(content: string, options: RenderMarkdownOpt
     },
   })
 
-  const html = marked.parse(content) as string
+  const rawHtml = marked.parse(content) as string
+  const html = autoWrapQuestions(rawHtml)
   features.hasKatex = html.includes("class=\"katex")
   features.hasScratchpad = html.includes("data-exam-question")
 

@@ -5,7 +5,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "1.4.6",
+    "@opencode-ai/plugin": "1.4.7",
     "chart.js": "^4.5.1",
     "cheerio": "^1.2.0",
     "css-tree": "^3.2.1",
